@@ -2,7 +2,14 @@
 Convert your PaintCode app Android Export java code to SkiaSharp C# code.
 
 Simple transpiler (or "text replacer") which creates SkiaSharp C# code from PaintCode ( https://www.paintcodeapp.com/ ) Android Java Export.
-Support basic features, including fonts, gradients, parameters, etc... Features were added until all icons I needed to convert were converted without errors. I'm using generated code on Xamarin.Android and Xamarin.iOS, in future in desktop .NET applications. Basically it is almost stupid string replacer. If it looks stupid but works it ain't stupid.
+Features were added until all icons I needed to convert were converted without errors. I'm using generated code on Xamarin.Android and Xamarin.iOS, in future in desktop .NET applications. Basically it is almost stupid string replacer. If it looks stupid but works it ain't stupid.
+
+What is working:
+- basic features, lines, rects, colors, etc
+- texts
+- gradients
+- Parameters!
+-...
 
 What is missing:
 
