@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "PaintCode2Skia": {
+      "commandName": "Project",
+      "commandLineArgs": "../Sample/StyleKitName.java ../Sample/StyleKitName.cs PaintCodeResources"
+    }
+  }
+}

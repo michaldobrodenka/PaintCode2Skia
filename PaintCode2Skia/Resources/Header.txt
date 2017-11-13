@@ -1,0 +1,9 @@
+﻿// Generated with PaintCode2Skia
+using SkiaSharp;
+using System;
+using System.IO;
+using System.Collections.Generic;
+using PaintCode;
+
+namespace {0}
+{{
