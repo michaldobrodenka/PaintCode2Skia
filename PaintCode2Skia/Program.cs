@@ -26,14 +26,8 @@ namespace PaintCode2Skia
                     Console.WriteLine($"Processing: '{javaArg.Value}' => '{csArg.Value}'...");
 
                     var javaLines = File.ReadAllLines(javaArg.Value);
-                    //var javaLines = File.ReadAllLines("TextSample.java");
-
                     var parser = new Parser();
-
-                    //File.WriteAllLines("Test.cs", parser.ParsePaintCodeJavaCode(javaLines, "PaintCode.VectorCodeResources"));
-                    //File.WriteAllLines("VectorIconsResource.cs", parser.ParsePaintCodeJavaCode(javaLines, "PaintCode.VectorCodeResources"));
-                    //File.WriteAllLines("TextSample.cs", parser.ParsePaintCodeJavaCode(javaLines, "PaintCode.VectorCodeResources"));
-                    File.WriteAllLines(csArg.Value, parser.ParsePaintCodeJavaCode(javaLines, namespaceArg.Value));// "PaintCode.StyleKitName"));
+                    File.WriteAllLines(csArg.Value, parser.ParsePaintCodeJavaCode(javaLines, namespaceArg.Value));
 
                     Console.WriteLine("Done.");
                 }
