@@ -514,7 +514,7 @@ namespace PaintCode
 
         public static SKColor colorByChangingAlpha(SKColor color, byte newAlpha)
         {
-            return new SKColor(newAlpha, color.Red, color.Green, color.Blue);
+            return new SKColor(color.Red, color.Green, color.Blue, newAlpha);
         }
 
         public static SKColor colorByBlendingColors(SKColor c1, float ratio, SKColor c2)
