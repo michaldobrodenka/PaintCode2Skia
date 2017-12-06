@@ -8,18 +8,18 @@ namespace PaintCode2Skia.Core
     public class Parser
     {
         private static readonly HashSet<string> classesInTemplate = new HashSet<string>
-            {
-                { "PaintCodeColor" },
-                { "PaintCodeGradient" },
-                { "PaintCodeLinearGradient" },
-                { "PaintCodeRadialGradient" },
-                { "PaintCodeStaticLayout" },
-            };
+        {
+            { "PaintCodeColor" },
+            { "PaintCodeGradient" },
+            { "PaintCodeLinearGradient" },
+            { "PaintCodeRadialGradient" },
+            { "PaintCodeStaticLayout" },
+        };
 
         private static readonly HashSet<string> methodsInHelpers = new HashSet<string>()
-            {
-                {"resizingBehaviorApply"},
-            };
+        {
+            {"resizingBehaviorApply"},
+        };
 
         private static readonly Dictionary<string, string> dataTypesMap = new Dictionary<string, string>()
         {
@@ -50,6 +50,7 @@ namespace PaintCode2Skia.Core
             { "Path.moveTo", "Path.MoveTo" },
             { "Path.lineTo", "Path.LineTo" },
             {"canvas.SaveLayer(null, paint, Canvas.ALL_SAVE_FLAG);" , "canvas.SaveLayer(paint);" },
+            {"canvas.SaveLayerAlpha(group2, 255, Canvas.ALL_SAVE_FLAG);" , "canvas.SaveLayer(group2, Helpers.PaintWithAlpha(255));" },
             {"aint.reset()", "aint.Reset()" },
             { "canvas.drawPath", "canvas.DrawPath" },
             {".setFlags(Paint.ANTI_ALIAS_FLAG);", ".IsAntialias = true;" },
@@ -74,6 +75,7 @@ namespace PaintCode2Skia.Core
             {"Math.abs", "Math.Abs" },
             {"Math.ceil", "Math.Ceiling" },
             {"Math.round", "Math.Round" },
+            {"Math.floor", "Math.Floor" },
             {"Path.cubicTo", "Path.CubicTo" },
             {"Frame.left", "Frame.Left" },
             {"Frame.right", "Frame.Right" },
@@ -87,6 +89,8 @@ namespace PaintCode2Skia.Core
             { "Color.BLACK", "Helpers.ColorBlack" },
             {"Color.WHITE", "Helpers.ColorWhite" },
             {"Color.GRAY", "Helpers.ColorGray" },
+            {"Color.RED", "Helpers.ColorRed" },
+            {"Color.GREEN", "Helpers.ColorGreen" },
             {".setXfermode(GlobalCache.blendModeMultiply)", ".BlendMode = SKBlendMode.Multiply" },
             {"Layout.Alignment.ALIGN_CENTER", "SKTextAlign.Center"},
             {"Layout.Alignment.ALIGN_NORMAL", "SKTextAlign.Left"},
@@ -340,11 +344,12 @@ namespace PaintCode2Skia.Core
                 }
                 else if (trimmedLine.StartsWith("int ") && (trimmedLine.Contains(" = Color.argb") || trimmedLine.Contains("Color")))
                 {
-                    this.output.Add(line.Replace("int ", "SKColor ").Replace(" = Color.argb", " = Helpers.ColorFromArgb"));
+                    this.output.Add(line.Replace("int ", "SKColor ")
+                        .Replace(" = Color.argb", " = Helpers.ColorFromArgb").Replace("(int)", "(byte)"));
                 }
                 else if (trimmedLine.Contains(".resizingBehaviorApply("))
                 {
-                    this.output.Add("        var resizedFrame = " + trimmedLine.Replace(", resizedFrame);", ");").Replace(this.currentContext.CurrentClassName+ ".resizingBehaviorApply", "Helpers.ResizingBehaviorApply"));
+                    this.output.Add("        var resizedFrame = " + trimmedLine.Replace(", resizedFrame);", ");").Replace(this.currentContext.CurrentClassName + ".resizingBehaviorApply", "Helpers.ResizingBehaviorApply"));
                     this.currentContext.SkippingRectFfromCache = false;
                 }
                 else if (trimmedLine.StartsWith("RectF ") && trimmedLine.Contains("= Cache"))
@@ -373,7 +378,7 @@ namespace PaintCode2Skia.Core
                 }
                 else if (trimmedLine.Contains(".setShader("))
                 {
-                    var newLine = line.Replace(".setShader(", ".Shader = ");
+                    var newLine = line.Replace(".setShader(", ".Shader = ").ReplaceAll(simpleCommandsMap).ReplaceAll(gettersMap);
 
                     if (!line.Contains("));"))
                         this.currentContext.NeedToReplaceTwoBrackets = true;

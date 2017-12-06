@@ -22,11 +22,22 @@ namespace PaintCode
         public static readonly SKColor ColorWhite = new SKColor(0xffffffff);
         public static readonly SKColor ColorGray = new SKColor(0xff888888);
         public static readonly SKColor ColorBlack = new SKColor(0xff000000);
+        public static readonly SKColor ColorRed = new SKColor(0xffff0000);
+        public static readonly SKColor ColorGreen = new SKColor(0xff00ff00);
 
         // Color.argb(
         public static SKColor ColorFromArgb(byte a, byte r, byte g, byte b)
         {
             return new SKColor(r, g, b, a);
+        }
+
+        public static SKPaint PaintWithAlpha(byte a)
+        {
+            var paint = new SKPaint();
+            paint.Style = SKPaintStyle.Fill;
+            paint.Color = ColorFromArgb(a, 255, 255, 255);
+
+            return paint;
         }
 
         //String.valueOf
@@ -54,20 +65,20 @@ namespace PaintCode
             switch (behavior)
             {
                 case ResizingBehavior.AspectFit:
-                    {
-                        scale = Math.Min(xRatio, yRatio);
-                        break;
-                    }
+                {
+                    scale = Math.Min(xRatio, yRatio);
+                    break;
+                }
                 case ResizingBehavior.AspectFill:
-                    {
-                        scale = Math.Max(xRatio, yRatio);
-                        break;
-                    }
+                {
+                    scale = Math.Max(xRatio, yRatio);
+                    break;
+                }
                 case ResizingBehavior.Center:
-                    {
-                        scale = 1f;
-                        break;
-                    }
+                {
+                    scale = 1f;
+                    break;
+                }
             }
 
             float newWidth = Math.Abs(rect.Width * scale);
