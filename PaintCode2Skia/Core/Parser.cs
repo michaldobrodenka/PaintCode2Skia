@@ -50,7 +50,6 @@ namespace PaintCode2Skia.Core
             { "Path.moveTo", "Path.MoveTo" },
             { "Path.lineTo", "Path.LineTo" },
             {"canvas.SaveLayer(null, paint, Canvas.ALL_SAVE_FLAG);" , "canvas.SaveLayer(paint);" },
-            {"canvas.SaveLayerAlpha(group2, 255, Canvas.ALL_SAVE_FLAG);" , "canvas.SaveLayer(group2, Helpers.PaintWithAlpha(255));" },
             {"aint.reset()", "aint.Reset()" },
             { "canvas.drawPath", "canvas.DrawPath" },
             {".setFlags(Paint.ANTI_ALIAS_FLAG);", ".IsAntialias = true;" },
@@ -400,6 +399,15 @@ namespace PaintCode2Skia.Core
                 else if (trimmedLine.Contains(".setColor("))
                 {
                     this.output.Add(line.ReplaceFirst(".setColor(", ".Color = (SKColor)").Replace(");", ";").ReplaceAll(simpleCommandsMap).ReplaceAll(gettersMap));
+                }
+                else if (trimmedLine.Contains("canvas.saveLayerAlpha("))
+                {
+                    var firstBracketIndex = line.IndexOf('(');
+                    var parametersStr = line.Remove(0, firstBracketIndex + 1);
+                    var rect = parametersStr.Split(',')[0];
+                    var value = parametersStr.Split(',')[1].Trim();
+                    var newLine = "        canvas.SaveLayer(" + rect +", Helpers.PaintWithAlpha(" + value + "));";
+                    this.output.Add(newLine);
                 }
                 else if (trimmedLine.Contains(".computeBounds("))
                 {
