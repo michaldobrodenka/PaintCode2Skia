@@ -112,6 +112,18 @@ namespace PaintCode
             var assembly = Assembly.GetExecutingAssembly();
 
             var stream = assembly.GetManifestResourceStream("PaintCodeResources.Fonts." + fullFontName);
+            
+            if (stream == null)
+            {
+                if (typefaceCache.Count != 0)
+                    return typefaceCache.FirstOrDefault().Value;
+
+                stream = assembly.GetManifestResourceStream("PaintCodeResources.Fonts.SF-UI-Display-Regular.otf");
+            }
+
+            if (stream == null)
+                return null;
+
             result = SKTypeface.FromStream(stream);
 
             typefaceCache[fullFontName] = result;
