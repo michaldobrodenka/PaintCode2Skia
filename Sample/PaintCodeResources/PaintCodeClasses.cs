@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 //using VectorCodeResources.Fonts;
@@ -540,9 +541,9 @@ namespace PaintCode
             return colorByBlendingColors(color, ratio, colorByChangingAlpha(Helpers.ColorWhite, color.Alpha));
         }
 
-        //public static int colorByApplyingShadow(int color, float ratio)
-        //{
-        //    return colorByBlendingColors(color, ratio, colorByChangingAlpha(Helpers.ColorBlack, Color.GetAlphaComponent(color)));
-        //}
+        public static SKColor colorByApplyingShadow(SKColor color, float ratio)
+        {
+            return colorByBlendingColors(color, ratio, colorByChangingAlpha(Helpers.ColorBlack, color.Alpha));
+        }
     }
 }
