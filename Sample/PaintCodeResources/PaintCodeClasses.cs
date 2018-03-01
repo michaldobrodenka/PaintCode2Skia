@@ -25,6 +25,7 @@ namespace PaintCode
         public static readonly SKColor ColorBlack = new SKColor(0xff000000);
         public static readonly SKColor ColorRed = new SKColor(0xffff0000);
         public static readonly SKColor ColorGreen = new SKColor(0xff00ff00);
+        public static readonly SKColor ColorLightGray = new SKColor(0xffcccccc);
 
         // Color.argb(
         public static SKColor ColorFromArgb(byte a, byte r, byte g, byte b)

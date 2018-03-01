@@ -90,6 +90,7 @@ namespace PaintCode2Skia.Core
             {"Color.GRAY", "Helpers.ColorGray" },
             {"Color.RED", "Helpers.ColorRed" },
             {"Color.GREEN", "Helpers.ColorGreen" },
+            {"Color.LTGRAY", "Helpers.ColorLightGray" },
             {".setXfermode(GlobalCache.blendModeMultiply)", ".BlendMode = SKBlendMode.Multiply" },
             {"Layout.Alignment.ALIGN_CENTER", "SKTextAlign.Center"},
             {"Layout.Alignment.ALIGN_NORMAL", "SKTextAlign.Left"},
