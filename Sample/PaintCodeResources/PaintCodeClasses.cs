@@ -146,13 +146,11 @@ namespace PaintCode
         private SKRect textRect;
         private SKPath textPath;
 
-        private SKRect highestLetterRect;
-
-        private float verticalInset;
+        private SKFontMetrics fontMetrics;
 
         public float getHeight()
         {
-            return this.highestLetterRect.Height + 0.5f;
+            return this.fontMetrics.CapHeight;
         }
 
         public StaticLayout(string source, SKPaint paint, int width, SKTextAlign alignment)
@@ -162,10 +160,8 @@ namespace PaintCode
             this.width = width;
             this.alignment = alignment;
 
-            paint.MeasureText("A,", ref this.highestLetterRect);
             paint.MeasureText(source, ref this.textRect);
-
-            this.verticalInset = (float)(highestLetterRect.Height - this.textRect.Height);
+            paint.GetFontMetrics(out fontMetrics);
         }
 
         public void draw(SKCanvas canvas)
@@ -174,9 +170,8 @@ namespace PaintCode
 
             if (this.textPath == null)
             {
-                var baseline = this.textRect.Height + 1 * this.verticalInset - 1;
                 textPath = new SKPath();
-                textPath.AddPoly(new SKPoint[] { new SKPoint(0, baseline), new SKPoint(this.width, baseline) }, false);
+                textPath.AddPoly(new SKPoint[] { new SKPoint(0, this.fontMetrics.CapHeight), new SKPoint(this.width, this.fontMetrics.CapHeight) }, false);
             }
 
             canvas.DrawTextOnPath(source, textPath, 0, 0, this.paint);
