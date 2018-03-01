@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 //using VectorCodeResources.Fonts;
@@ -111,6 +112,18 @@ namespace PaintCode
             var assembly = Assembly.GetExecutingAssembly();
 
             var stream = assembly.GetManifestResourceStream("PaintCodeResources.Fonts." + fullFontName);
+            
+            if (stream == null)
+            {
+                if (typefaceCache.Count != 0)
+                    return typefaceCache.FirstOrDefault().Value;
+
+                stream = assembly.GetManifestResourceStream("PaintCodeResources.Fonts.SF-UI-Display-Regular.otf");
+            }
+
+            if (stream == null)
+                return null;
+
             result = SKTypeface.FromStream(stream);
 
             typefaceCache[fullFontName] = result;
@@ -540,9 +553,9 @@ namespace PaintCode
             return colorByBlendingColors(color, ratio, colorByChangingAlpha(Helpers.ColorWhite, color.Alpha));
         }
 
-        //public static int colorByApplyingShadow(int color, float ratio)
-        //{
-        //    return colorByBlendingColors(color, ratio, colorByChangingAlpha(Helpers.ColorBlack, Color.GetAlphaComponent(color)));
-        //}
+        public static SKColor colorByApplyingShadow(SKColor color, float ratio)
+        {
+            return colorByBlendingColors(color, ratio, colorByChangingAlpha(Helpers.ColorBlack, color.Alpha));
+        }
     }
 }
