@@ -250,6 +250,8 @@ namespace PaintCode
         public static void Reset(this SKPaint paint)
         {
             paint.BlendMode = SKBlendMode.SrcOver;
+            paint.Shader = null;
+            paint.Color = SKColors.Black;
         }
 
         public static void mapPoints(this SKMatrix matrix, float[] points)
