@@ -2,7 +2,7 @@
   "profiles": {
     "PaintCode2Skia": {
       "commandName": "Project",
-      "commandLineArgs": "../Sample/StyleKitName.java ../Sample/StyleKitName.cs PaintCodeResources"
+      "commandLineArgs": "c:\\work\\taphome2\\PaintCodeResources\\VectorIconsResource.java  c:\\work\\taphome2\\PaintCodeResources\\VectorIconsResource2.cs PaintCodeResources"
     }
   }
 }
