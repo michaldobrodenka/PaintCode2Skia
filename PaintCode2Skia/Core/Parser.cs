@@ -85,6 +85,8 @@ namespace PaintCode2Skia.Core
             {"setStrokeJoin(Paint.Join.ROUND)", "StrokeJoin = SKStrokeJoin.Round" },
             {"setStrokeJoin(Paint.Join.BEVEL)", "StrokeJoin = SKStrokeJoin.Bevel" },
             {"setStrokeCap(Paint.Cap.ROUND)", "StrokeCap = SKStrokeCap.Round" },
+            {"setStrokeCap(Paint.Cap.SQUARE)", "StrokeCap = SKStrokeCap.Square" },
+            {"setStrokeCap(Paint.Cap.BUTT)", "StrokeCap = SKStrokeCap.Butt" },
             { "Color.BLACK", "Helpers.ColorBlack" },
             {"Color.WHITE", "Helpers.ColorWhite" },
             {"Color.GRAY", "Helpers.ColorGray" },
@@ -144,6 +146,12 @@ namespace PaintCode2Skia.Core
             public bool LastLineWasNewLine { get; set; }
 
             public bool NeedToReplaceTwoBrackets { get; set; } // )); could not be on the same line as beginnig of the command
+
+            public string CurrentMethodNameAndModifiers { get; set; }
+
+            public List<Tuple<string, string>> CurrentMethodParameters { get; set; } = new List<Tuple<string, string>>();
+
+            public List<string> CurrentMethodLines { get; set; } = new List<string>();
         }
 
         string csNamespace;
@@ -174,7 +182,14 @@ namespace PaintCode2Skia.Core
                 {
                     if (!this.currentContext.LastLineWasNewLine)
                     {
-                        this.output.Add(line);
+                        if (this.currentContext.FilePart == FilePart.Method)
+                        {
+                            this.currentContext.CurrentMethodLines.Add(line);
+                        }
+                        else
+                        {
+                            this.output.Add(line);
+                        }
                     }
 
                     this.currentContext.LastLineWasNewLine = true;
@@ -183,7 +198,15 @@ namespace PaintCode2Skia.Core
 
                 if (trimmedLine.StartsWith("//"))
                 {
-                    this.output.Add(line);
+                    if (this.currentContext.FilePart == FilePart.Method)
+                    {
+                        this.currentContext.CurrentMethodLines.Add(line);
+                    }
+                    else
+                    {
+                        this.output.Add(line);
+                    }
+
                     continue;
                 }
 
@@ -311,9 +334,36 @@ namespace PaintCode2Skia.Core
             else if (trimmedLine == "}")
             {
                 if (this.currentContext.ExtraNestingInMethod > 0)
+                {
                     this.currentContext.ExtraNestingInMethod--;
+                }
                 else
+                {
+                    if (!this.currentContext.OmitCurrentMethod)
+                    {
+                        // flush method to output
+                        var signature = this.currentContext.CurrentMethodNameAndModifiers;
+
+                        for (int i = 0; i < this.currentContext.CurrentMethodParameters.Count; i++)
+                        {
+                            var parameter = this.currentContext.CurrentMethodParameters[i];
+                            signature += parameter.Item1 + " " + parameter.Item2;
+
+                            if (i < this.currentContext.CurrentMethodParameters.Count - 1)
+                            {
+                                signature += ", ";
+                            }
+                        }
+
+                        signature += ")";
+
+                        this.output.Add(signature);
+                        this.output.AddRange(this.currentContext.CurrentMethodLines);
+                        this.output.Add("    }");
+                    }
+
                     this.currentContext.FilePart = FilePart.Class;
+                }
             }
 
 
@@ -328,28 +378,28 @@ namespace PaintCode2Skia.Core
 
                 if (trimmedLine.EndsWith("{"))
                 {
-                    this.output.Add(line);
+                    this.currentContext.CurrentMethodLines.Add(line);
                 }
                 else if (trimmedLine.StartsWith("//"))
                 {
-                    this.output.Add(line);
+                    this.currentContext.CurrentMethodLines.Add(line);
                 }
                 else if (trimmedLine.StartsWith("Paint "))
                 {
-                    this.output.Add(line.ReplaceFirst("Paint ", "SKPaint "));
+                    this.currentContext.CurrentMethodLines.Add(line.ReplaceFirst("Paint ", "SKPaint "));
                 }
                 else if (trimmedLine.StartsWith("Path "))
                 {
-                    this.output.Add(line.ReplaceFirst("Path ", "SKPath "));
+                    this.currentContext.CurrentMethodLines.Add(line.ReplaceFirst("Path ", "SKPath "));
                 }
                 else if (trimmedLine.StartsWith("int ") && (trimmedLine.Contains(" = Color.argb") || trimmedLine.Contains("Color")))
                 {
-                    this.output.Add(line.Replace("int ", "SKColor ")
+                    this.currentContext.CurrentMethodLines.Add(line.Replace("int ", "SKColor ")
                         .Replace(" = Color.argb", " = Helpers.ColorFromArgb").Replace("(int)", "(byte)"));
                 }
                 else if (trimmedLine.Contains(".resizingBehaviorApply("))
                 {
-                    this.output.Add("        var resizedFrame = " + trimmedLine.Replace(", resizedFrame);", ");").Replace(this.currentContext.CurrentClassName + ".resizingBehaviorApply", "Helpers.ResizingBehaviorApply"));
+                    this.currentContext.CurrentMethodLines.Add("        var resizedFrame = " + trimmedLine.Replace(", resizedFrame);", ");").Replace(this.currentContext.CurrentClassName + ".resizingBehaviorApply", "Helpers.ResizingBehaviorApply"));
                     this.currentContext.SkippingRectFfromCache = false;
                 }
                 else if (trimmedLine.StartsWith("RectF ") && trimmedLine.Contains("= Cache"))
@@ -360,21 +410,32 @@ namespace PaintCode2Skia.Core
                 }
                 else if (trimmedLine.Contains(".set(") && this.currentContext.SkippingRectFfromCache)
                 {
-                    this.output.Add(("        var " + trimmedLine.Split('.')[0] + " = new SKRect" + trimmedLine.Remove(0, trimmedLine.IndexOf('('))).ReplaceAll(gettersMap).ReplaceAll(simpleCommandsMap));
-                    //this.output.Add("        var " + trimmedLine.Split('.')[0] + " = new SKRect(" + trimmedLine.Split('(')[1]);
+                    var rectName = trimmedLine.Split('.')[0];
+
+                    this.currentContext.CurrentMethodLines.Add(("        var " + rectName + " = new SKRect" + trimmedLine.Remove(0, trimmedLine.IndexOf('('))).ReplaceAll(gettersMap).ReplaceAll(simpleCommandsMap));
+                    //this.currentContext.CurrentMethodLines.Add("        var " + trimmedLine.Split('.')[0] + " = new SKRect(" + trimmedLine.Split('(')[1]);
+
+                    if (rectName.StartsWith("embed"))
+                    {
+                        var embedRectName = rectName.ReplaceFirst("embed", String.Empty);
+                        embedRectName = embedRectName.ReplaceFirst(embedRectName[0].ToString(), embedRectName[0].ToString().ToLower());
+                        this.currentContext.CurrentMethodParameters.Add(new Tuple<string, string>("out SKRect", embedRectName));
+                        this.currentContext.CurrentMethodLines.Add("        " + embedRectName + " = " + rectName + "; // set SKRect for use outside");
+                    }
+
                     this.currentContext.SkippingRectFfromCache = false;
                 }
                 else if (trimmedLine.Contains(".setTypeface(Typeface.createFromAsset(context.getAssets(), "))
                 {
-                    this.output.Add(line.Replace(".setTypeface(Typeface.createFromAsset(context.getAssets(), ", ".Typeface = TypefaceManager.GetTypeface(").Replace("));", ");"));
+                    this.currentContext.CurrentMethodLines.Add(line.Replace(".setTypeface(Typeface.createFromAsset(context.getAssets(), ", ".Typeface = TypefaceManager.GetTypeface(").Replace("));", ");"));
                 }
                 else if (trimmedLine.Contains(" new PaintCodeGradient") && trimmedLine.Contains("new int[]"))
                 {
-                    this.output.Add(line.Replace("new int[]", "new SKColor[]").ReplaceAll(simpleCommandsMap).ReplaceAll(gettersMap));
+                    this.currentContext.CurrentMethodLines.Add(line.Replace("new int[]", "new SKColor[]").ReplaceAll(simpleCommandsMap).ReplaceAll(gettersMap));
                 }
                 else if (trimmedLine.Contains("TextPaint "))
                 {
-                    this.output.Add(line.ReplaceFirst("TextPaint ", "var "));
+                    this.currentContext.CurrentMethodLines.Add(line.ReplaceFirst("TextPaint ", "var "));
                 }
                 else if (trimmedLine.Contains(".setShader("))
                 {
@@ -383,23 +444,23 @@ namespace PaintCode2Skia.Core
                     if (!line.Contains("));"))
                         this.currentContext.NeedToReplaceTwoBrackets = true;
 
-                    this.output.Add(newLine.Replace("));", ");"));
+                    this.currentContext.CurrentMethodLines.Add(newLine.Replace("));", ");"));
                 }
                 else if (trimmedLine.Contains(".setTextSize("))
                 {
-                    this.output.Add(line.ReplaceFirst(".setTextSize(", ".TextSize = ").Replace(")", ""));
+                    this.currentContext.CurrentMethodLines.Add(line.ReplaceFirst(".setTextSize(", ".TextSize = ").Replace(")", ""));
                 }
                 else if (trimmedLine.Contains(".setStrokeWidth("))
                 {
-                    this.output.Add(line.ReplaceFirst(".setStrokeWidth(", ".StrokeWidth = ").Replace(")", ""));
+                    this.currentContext.CurrentMethodLines.Add(line.ReplaceFirst(".setStrokeWidth(", ".StrokeWidth = ").Replace(")", ""));
                 }
                 else if (trimmedLine.Contains(".setStrokeMiter("))
                 {
-                    this.output.Add(line.ReplaceFirst(".setStrokeMiter(", ".StrokeMiter = ").Replace(")", ""));
+                    this.currentContext.CurrentMethodLines.Add(line.ReplaceFirst(".setStrokeMiter(", ".StrokeMiter = ").Replace(")", ""));
                 }
                 else if (trimmedLine.Contains(".setColor("))
                 {
-                    this.output.Add(line.ReplaceFirst(".setColor(", ".Color = (SKColor)").Replace(");", ";").ReplaceAll(simpleCommandsMap).ReplaceAll(gettersMap));
+                    this.currentContext.CurrentMethodLines.Add(line.ReplaceFirst(".setColor(", ".Color = (SKColor)").Replace(");", ";").ReplaceAll(simpleCommandsMap).ReplaceAll(gettersMap));
                 }
                 else if (trimmedLine.Contains("canvas.saveLayerAlpha("))
                 {
@@ -407,8 +468,13 @@ namespace PaintCode2Skia.Core
                     var parametersStr = line.Remove(0, firstBracketIndex + 1);
                     var rect = parametersStr.Split(',')[0];
                     var value = parametersStr.Split(',')[1].Trim();
-                    var newLine = "        canvas.SaveLayer(" + rect +", Helpers.PaintWithAlpha(" + value + "));";
-                    this.output.Add(newLine);
+                    var newLine = "        canvas.SaveLayer(";
+                    if (!string.IsNullOrEmpty(rect) && rect != "null")
+                    {
+                        newLine += rect + ", ";
+                    }
+                    newLine += "Helpers.PaintWithAlpha(" + value + "));";
+                    this.currentContext.CurrentMethodLines.Add(newLine);
                 }
                 else if (trimmedLine.Contains(".computeBounds("))
                 {
@@ -417,31 +483,31 @@ namespace PaintCode2Skia.Core
                     var bounds = parametersStr.Split(',')[0];
                     var path = trimmedLine.Split('.')[0];
                     var newLine = "        var " + bounds + " = " + path + ".ComputeTightBounds();";
-                    this.output.Add(newLine);
+                    this.currentContext.CurrentMethodLines.Add(newLine);
                 }
                 else if (trimmedLine.Contains("Matrix"))
                 {
                     if (trimmedLine.Contains("Stack<Matrix>") || trimmedLine.Contains(".push"))
                     {
-                        this.output.Add("// " + line + " // skipping - we do not support Matrix yet");
+                        this.currentContext.CurrentMethodLines.Add("// " + line + " // skipping - we do not support Matrix yet");
                     }
                     else
                     {
-                        this.output.Add(line.Replace("Matrix", "SKMatrix").Replace(" = ", "; //"));
+                        this.currentContext.CurrentMethodLines.Add(line.Replace("Matrix", "SKMatrix").Replace(" = ", "; //"));
                     }
                 }
                 else if (trimmedLine.Contains("Transformation.peek()"))
                 {
-                    this.output.Add("// " + line + " // skipping - we do not support Matrix yet");
+                    this.currentContext.CurrentMethodLines.Add("// " + line + " // skipping - we do not support Matrix yet");
                 }
                 else if (trimmedLine == "}")
                 {
                     this.currentContext.NeedToReplaceTwoBrackets = false;
-                    this.output.Add(line);
+                    this.currentContext.CurrentMethodLines.Add(line);
                 }
                 else
                 {
-                    this.output.Add(line.ReplaceAll(simpleCommandsMap).ReplaceAll(gettersMap));
+                    this.currentContext.CurrentMethodLines.Add(line.ReplaceAll(simpleCommandsMap).ReplaceAll(gettersMap));
                 }
             }
         }
@@ -581,6 +647,10 @@ namespace PaintCode2Skia.Core
 
                 string methodName = line.Split(new char[] { ' ', '(' }).Last(p => !String.IsNullOrEmpty(p.Trim()));
 
+                this.currentContext.CurrentMethodNameAndModifiers = line;
+                this.currentContext.CurrentMethodParameters.Clear();
+                this.currentContext.CurrentMethodLines.Clear();
+
                 for (int i = 0; i < parameters.Length; i++)
                 {
                     var p = parameters[i];
@@ -595,13 +665,14 @@ namespace PaintCode2Skia.Core
                         components[0] = "SKColor";
                     }
 
-                    line += components[0] + " " + components[1];
-                    if (i < parameters.Length - 1)
-                    {
-                        line += ", ";
-                    }
+                    this.currentContext.CurrentMethodParameters.Add(new Tuple<string, string>(components[0], components[1]));
+                    //line += components[0] + " " + components[1];
+                    //if (i < parameters.Length - 1)
+                    //{
+                    //    line += ", ";
+                    //}
                 }
-                line += ")";
+                //line += ")";
 
                 this.currentContext.FilePart = FilePart.Method;
                 this.currentContext.ExtraNestingInMethod = 0;
@@ -614,8 +685,11 @@ namespace PaintCode2Skia.Core
                 else
                 {
                     this.currentContext.OmitCurrentMethod = false;
-                    this.output.Add(line);
-                    this.output.Add("    {");
+
+                    //this.currentContext.CurrentMethodLines.Add(line);
+                    //this.output.Add(line);
+                    this.currentContext.CurrentMethodLines.Add("    {");    
+                    //this.output.Add("    {");
                 }
             }
         }
