@@ -35,9 +35,11 @@ namespace PaintCode
 
         public static SKPaint PaintWithAlpha(byte a)
         {
-            var paint = new SKPaint();
-            paint.Style = SKPaintStyle.Fill;
-            paint.Color = ColorFromArgb(a, 255, 255, 255);
+            var paint = new SKPaint
+            {
+                Style = SKPaintStyle.Fill,
+                Color = ColorFromArgb(a, 255, 255, 255)
+            };
 
             return paint;
         }
@@ -205,6 +207,14 @@ namespace PaintCode
         #endregion
     }
 
+    public class Color
+    {
+        public static float alpha(SKColor color)
+        {
+            return (color.Alpha / 255f);
+        }
+    }
+
     public static class Extensions
     {
         public static void AddRoundedRect(this SKPath path, SKRect rectangleRect, float[] rectangleCornerRadii, SKPathDirection direction)
@@ -252,6 +262,7 @@ namespace PaintCode
             paint.BlendMode = SKBlendMode.SrcOver;
             paint.Shader = null;
             paint.Color = SKColors.Black;
+            paint.MaskFilter = null;
         }
 
         public static void mapPoints(this SKMatrix matrix, float[] points)
@@ -263,6 +274,77 @@ namespace PaintCode
             points[2] = newPoints[1].X;
             points[3] = newPoints[1].Y;
         }
+    }
+
+    public class PaintCodeShadow : IDisposable
+    {
+        public SKColor color;
+        public float dx, dy;
+        private float radius;
+        private SKMaskFilter blurMaskFilter;
+
+        public PaintCodeShadow()
+        {
+
+        }
+
+        PaintCodeShadow(SKColor color, float dx, float dy, float radius)
+        {
+            this.get(color, dx, dy, radius);
+        }
+
+        public PaintCodeShadow get(SKColor color, float dx, float dy, float radius)
+        {
+            this.color = color;
+            this.dx = dx;
+            this.dy = dy;
+
+            if (this.radius != radius)
+            {
+                this.blurMaskFilter = null;
+                this.radius = radius;
+            }
+
+            return this;
+        }
+
+        public void setBlurOfPaint(SKPaint paint)
+        {
+            if (this.radius <= 0)
+                return;
+
+            if (this.blurMaskFilter == null)
+                this.blurMaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, SKMaskFilter.ConvertRadiusToSigma(this.radius)); // 1.7f - manually to make it look like paintcode
+                //this.blurMaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, this.radius/5);
+
+            paint.MaskFilter = this.blurMaskFilter;
+            //paint.Color = this.color; // sure?
+        }
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    if (this.blurMaskFilter != null)
+                        this.blurMaskFilter.Dispose();
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        // This code added to correctly implement the disposable pattern.
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+        }
+        #endregion
     }
 
     public class PaintCodeStaticLayout : IDisposable
@@ -509,7 +591,7 @@ namespace PaintCode
         {
             float h, s, v;
             originalColor.ToHsv(out h, out s, out v);
-            return SKColor.FromHsv(h, newSaturation, v);
+            return SKColor.FromHsv(h, newSaturation, v, originalColor.Alpha);
         }
 
         //public static int colorByChangingValue(int originalColor, float newValue)

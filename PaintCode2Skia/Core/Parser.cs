@@ -51,7 +51,9 @@ namespace PaintCode2Skia.Core
             { "Path.lineTo", "Path.LineTo" },
             {"canvas.SaveLayer(null, paint, Canvas.ALL_SAVE_FLAG);" , "canvas.SaveLayer(paint);" },
             {"aint.reset()", "aint.Reset()" },
+            { "canvas.drawColor", "canvas.DrawColor" },
             { "canvas.drawPath", "canvas.DrawPath" },
+            { "canvas.drawPaint", "canvas.DrawPaint" },
             {".setFlags(Paint.ANTI_ALIAS_FLAG);", ".IsAntialias = true;" },
             {".setStyle(Paint.Style.STROKE)", ".Style = SKPaintStyle.Stroke" },
             {".setStyle(Paint.Style.STROKE_AND_FILL)", ".Style = SKPaintStyle.StrokeAndFill" },
@@ -69,7 +71,9 @@ namespace PaintCode2Skia.Core
             {".bottom", ".Bottom" },
             {"Path.Direction.CW" , "SKPathDirection.Clockwise" },
             {"Path.Direction.CCW" , "SKPathDirection.CounterClockwise" },
-            {"Math.min", "Math.Min" },
+            {"Math.sin", "Math.Sin" },
+            {"Math.cos", "Math.Cos" },
+            { "Math.min", "Math.Min" },
             {"Math.max", "Math.Max" },
             {"Math.abs", "Math.Abs" },
             {"Math.ceil", "Math.Ceiling" },
@@ -94,6 +98,8 @@ namespace PaintCode2Skia.Core
             {"Color.GREEN", "Helpers.ColorGreen" },
             {"Color.LTGRAY", "Helpers.ColorLightGray" },
             {".setXfermode(GlobalCache.blendModeMultiply)", ".BlendMode = SKBlendMode.Multiply" },
+            {".setXfermode(GlobalCache.blendModeDestinationOut)", ".BlendMode = SKBlendMode.DstOut;" },
+            {".setXfermode(GlobalCache.blendModeSourceIn);", ".BlendMode = SKBlendMode.SrcIn;" },
             {"Layout.Alignment.ALIGN_CENTER", "SKTextAlign.Center"},
             {"Layout.Alignment.ALIGN_NORMAL", "SKTextAlign.Left"},
             {"Layout.Alignment.ALIGN_OPPOSITE", "SKTextAlign.Right"},
@@ -101,6 +107,7 @@ namespace PaintCode2Skia.Core
             {".postRotate(", " = SKMatrix.MakeRotationDegrees(" },
             {".transform(",".Transform("},
             {".invert(",".TryInvert(out " },
+            {"(int) (Color.alpha", "(byte) (Color.alpha" },
             //{".computeBounds",  }
         };
 
@@ -152,6 +159,10 @@ namespace PaintCode2Skia.Core
             public List<Tuple<string, string>> CurrentMethodParameters { get; set; } = new List<Tuple<string, string>>();
 
             public List<string> CurrentMethodLines { get; set; } = new List<string>();
+
+            public List<Tuple<int, string>> DisposablesInCurrentMethodAtNesting = new List<Tuple<int, string>>();
+
+            public int CurrentTempPaintsForSaveLayerAlpha = 0;
         }
 
         string csNamespace;
@@ -174,8 +185,10 @@ namespace PaintCode2Skia.Core
 
             this.output.Add(String.Format(global::PaintCode2Skia.Resources.Resources.Header, this.csNamespace));
 
-            foreach (var line in javaLines)
+            for (int i = 0; i < javaLines.Length; i++)
             {
+                var line = javaLines[i];
+
                 var trimmedLine = line.Trim();
 
                 if (String.IsNullOrEmpty(trimmedLine))
@@ -235,7 +248,7 @@ namespace PaintCode2Skia.Core
                         break;
 
                     case FilePart.Method:
-                        this.ParseLineInMethod(trimmedLine, line);
+                        this.ParseLineInMethod(trimmedLine, line, javaLines, i);
                         break;
 
                     case FilePart.AfterMainClass:
@@ -325,7 +338,7 @@ namespace PaintCode2Skia.Core
             }
         }
 
-        private void ParseLineInMethod(string trimmedLine, string line)
+        private void ParseLineInMethod(string trimmedLine, string line, string[] lines, int currentLineIndex)
         {
             if (trimmedLine.EndsWith("{"))
             {
@@ -335,7 +348,22 @@ namespace PaintCode2Skia.Core
             {
                 if (this.currentContext.ExtraNestingInMethod > 0)
                 {
+                    foreach (var disposable in this.currentContext.DisposablesInCurrentMethodAtNesting.ToArray())
+                    {
+                        if (disposable.Item1 == this.currentContext.ExtraNestingInMethod)
+                        {
+                            this.currentContext.CurrentMethodLines.Add("            " + disposable.Item2 + ".Dispose();");
+
+                            this.currentContext.DisposablesInCurrentMethodAtNesting.Remove(disposable);
+                        }
+                    }
+
+
                     this.currentContext.ExtraNestingInMethod--;
+
+
+                    //this.currentContext.CurrentMethodLines
+
                 }
                 else
                 {
@@ -386,7 +414,29 @@ namespace PaintCode2Skia.Core
                 }
                 else if (trimmedLine.StartsWith("Paint "))
                 {
-                    this.currentContext.CurrentMethodLines.Add(line.ReplaceFirst("Paint ", "SKPaint "));
+                    if (NextLine(lines, currentLineIndex)?.Contains("aint.set(") ?? false)
+                    {
+                        // skip, we will use paint.Clone() and local variable with Dispose()
+                    }
+                    else
+                    {
+                        this.currentContext.CurrentMethodLines.Add(line.ReplaceFirst("Paint ", "SKPaint "));
+                    }
+                }
+                else if (trimmedLine.Contains("anvas.concat("))
+                {
+                    this.currentContext.CurrentMethodLines.Add("// " + line + " // not supported yet");
+                }
+                else if (trimmedLine.Contains("ransformation.pop()"))
+                {
+                    this.currentContext.CurrentMethodLines.Add("// " + line + " // not supported yet");
+                }
+                else if (trimmedLine.Contains("aint.set(") && trimmedLine.Contains("aint);"))
+                {
+                    line = "            var " + trimmedLine.Replace(".set(", " = ");
+                    line = line.Replace(");", ".Clone();");
+                    this.currentContext.CurrentMethodLines.Add(line);
+                    this.currentContext.DisposablesInCurrentMethodAtNesting.Add(new Tuple<int, string>(this.currentContext.ExtraNestingInMethod, trimmedLine.Split('.')[0]));
                 }
                 else if (trimmedLine.StartsWith("Path "))
                 {
@@ -437,6 +487,15 @@ namespace PaintCode2Skia.Core
                 {
                     this.currentContext.CurrentMethodLines.Add(line.ReplaceFirst("TextPaint ", "var "));
                 }
+                else if (trimmedLine.Contains(".colorByChangingAlpha("))
+                {
+                    var newLine = line.Replace(".setShader(", ".Shader = ").ReplaceAll(simpleCommandsMap).ReplaceAll(gettersMap);
+
+                    if (!line.Contains("));"))
+                        this.currentContext.NeedToReplaceTwoBrackets = true;
+
+                    this.currentContext.CurrentMethodLines.Add(newLine.Replace("));", ");"));
+                }
                 else if (trimmedLine.Contains(".setShader("))
                 {
                     var newLine = line.Replace(".setShader(", ".Shader = ").ReplaceAll(simpleCommandsMap).ReplaceAll(gettersMap);
@@ -468,12 +527,30 @@ namespace PaintCode2Skia.Core
                     var parametersStr = line.Remove(0, firstBracketIndex + 1);
                     var rect = parametersStr.Split(',')[0];
                     var value = parametersStr.Split(',')[1].Trim();
-                    var newLine = "        canvas.SaveLayer(";
+                    value = value.Replace("(int)", "(byte)");
+
+                    this.currentContext.CurrentTempPaintsForSaveLayerAlpha++;
+                    var tempPaintName = "tempPaint" + this.currentContext.CurrentTempPaintsForSaveLayerAlpha;
+
+                    var tempPaintLine = $"            var {tempPaintName} = Helpers.PaintWithAlpha({value});";
+                    this.currentContext.CurrentMethodLines.Add(tempPaintLine);
+
+                    var newLine = $"        canvas.SaveLayer(";
                     if (!string.IsNullOrEmpty(rect) && rect != "null")
                     {
                         newLine += rect + ", ";
                     }
-                    newLine += "Helpers.PaintWithAlpha(" + value + "));";
+                    newLine += tempPaintName + ");";
+                    this.currentContext.CurrentMethodLines.Add(newLine);
+
+                    this.currentContext.DisposablesInCurrentMethodAtNesting.Add(new Tuple<int, string>(this.currentContext.ExtraNestingInMethod, tempPaintName));
+                }
+                else if (trimmedLine.Contains("canvas.saveLayer(null, ") && trimmedLine.Contains(", Canvas.ALL_SAVE_FLAG);"))
+                {
+                    var newLine = trimmedLine.Replace("(null, ", "(");
+                    newLine = newLine.Replace(".saveLayer", ".SaveLayer");
+                    newLine = newLine.Replace(", Canvas.ALL_SAVE_FLAG);", ");");
+                    newLine = "        " + newLine;
                     this.currentContext.CurrentMethodLines.Add(newLine);
                 }
                 else if (trimmedLine.Contains(".computeBounds("))
@@ -510,6 +587,14 @@ namespace PaintCode2Skia.Core
                     this.currentContext.CurrentMethodLines.Add(line.ReplaceAll(simpleCommandsMap).ReplaceAll(gettersMap));
                 }
             }
+        }
+
+        private static string NextLine(string[] lines, int i)
+        {
+            if (lines.Length > i + 1)
+                return lines[i + 1];
+
+            return null;
         }
 
         private string ReplaceGetters(string line)
@@ -590,7 +675,12 @@ namespace PaintCode2Skia.Core
 
                     this.output.Add($"        private static float[] {name}_store; public static float[] {name} {{ get {{ if ({name}_store == null) {name}_store = new float[{size}]; return {name}_store; }} }}");
                     break;
+                case "PaintCodeShadow":
+                    //this.output.Add(line.Replace("private static", "public static"));
+                    this.output.Add($"        private static PaintCodeShadow {name}_store; public static PaintCodeShadow {name} {{ get {{ if ({name}_store == null) {name}_store = new PaintCodeShadow(); return {name}_store; }} }}");
+                    break;
 
+                    //private static PaintCodeShadow shadow = new PaintCodeShadow();
                 default:
                     Console.WriteLine("ERROR: Unknon data type in cache class:" + type);
                     break;
@@ -650,6 +740,8 @@ namespace PaintCode2Skia.Core
                 this.currentContext.CurrentMethodNameAndModifiers = line;
                 this.currentContext.CurrentMethodParameters.Clear();
                 this.currentContext.CurrentMethodLines.Clear();
+                this.currentContext.DisposablesInCurrentMethodAtNesting.Clear();
+                this.currentContext.CurrentTempPaintsForSaveLayerAlpha = 0;
 
                 for (int i = 0; i < parameters.Length; i++)
                 {
