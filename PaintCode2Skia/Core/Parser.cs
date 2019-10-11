@@ -27,6 +27,7 @@ namespace PaintCode2Skia.Core
             { "Canvas", "SKCanvas" },
             { "RectF", "SKRect" },
             { "boolean", "bool" },
+            { "PointF", "SKPoint" },
             //{ "Context", "IFontProvider" }
         };
 
@@ -65,9 +66,12 @@ namespace PaintCode2Skia.Core
             {"Path.addOval", "Path.AddOval" },
             {"Path.close()", "Path.Close()" },
             {"new RectF", "new SKRect" },
+            {"new PointF", "new SKPoint" },
             {".left", ".Left" },
             {".right", ".Right" },
             {".top", ".Top" },
+            {".y", ".Y" },
+            {".x", ".X" },
             {".bottom", ".Bottom" },
             {"Path.Direction.CW" , "SKPathDirection.Clockwise" },
             {"Path.Direction.CCW" , "SKPathDirection.CounterClockwise" },
@@ -164,6 +168,20 @@ namespace PaintCode2Skia.Core
 
             public int CurrentTempPaintsForSaveLayerAlpha = 0;
         }
+
+        private struct OutRectInfo
+        {
+            public string Type;
+            public string Name;
+
+            public OutRectInfo(string type, string name)
+            {
+                Type = type;
+                Name = name;
+            }
+        }
+
+        private Dictionary<string, List<OutRectInfo>> methodsWithAddedOutRect = new Dictionary<string, List<OutRectInfo>>();
 
         string csNamespace;
 
@@ -262,6 +280,8 @@ namespace PaintCode2Skia.Core
 
                 //this.ParseLine(line.Trim());
             }
+
+            AddOutRectsToMethods();
 
             this.output.Add("} // end of namespace");
 
@@ -471,6 +491,13 @@ namespace PaintCode2Skia.Core
                         embedRectName = embedRectName.ReplaceFirst(embedRectName[0].ToString(), embedRectName[0].ToString().ToLower());
                         this.currentContext.CurrentMethodParameters.Add(new Tuple<string, string>("out SKRect", embedRectName));
                         this.currentContext.CurrentMethodLines.Add("        " + embedRectName + " = " + rectName + "; // set SKRect for use outside");
+
+                        if (!methodsWithAddedOutRect.ContainsKey(this.currentContext.CurrentMethodName))
+                        {
+                            this.methodsWithAddedOutRect.Add(this.currentContext.CurrentMethodName, new List<OutRectInfo>());
+                        }
+
+                        this.methodsWithAddedOutRect[this.currentContext.CurrentMethodName].Add(new OutRectInfo("out SKRect", embedRectName));
                     }
 
                     this.currentContext.SkippingRectFfromCache = false;
@@ -572,6 +599,10 @@ namespace PaintCode2Skia.Core
                     {
                         this.currentContext.CurrentMethodLines.Add(line.Replace("Matrix", "SKMatrix").Replace(" = ", "; //"));
                     }
+                }
+                else if (trimmedLine.StartsWith("RectF") && trimmedLine.Contains("new RectF"))
+                {
+                    this.currentContext.CurrentMethodLines.Add(trimmedLine.Replace("RectF", "SKRect"));
                 }
                 else if (trimmedLine.Contains("Transformation.peek()"))
                 {
@@ -810,6 +841,56 @@ namespace PaintCode2Skia.Core
                 {
                     this.currentContext.FilePart = FilePart.Class;
                 }
+            }
+        }
+        
+        private void AddOutRectsToMethods()
+        {
+            foreach (var methodKvp in methodsWithAddedOutRect)
+            {
+                var methodName = methodKvp.Key;
+
+                // select lines containing method name and their indices
+                var linesContainingMethodName = this.output
+                    .Select((line, index) => new { line, index })
+                    .Where(line => line.line.Contains($"{methodName}("))
+                    .ToList();
+
+                // problematic methods with out rect will be mentioned 3 times (signature1, call, signature2)
+                if (linesContainingMethodName.Count != 3)
+                    continue;
+
+                var outRects = methodKvp.Value;
+
+                // edit method signature to contain out rects
+                var originalMethodSignature = linesContainingMethodName[0].line;
+                var newMethodSignature = new StringBuilder(originalMethodSignature.Substring(0, originalMethodSignature.Length - 1));
+                foreach (var outRect in outRects)
+                {
+                    newMethodSignature
+                        .Append(", ")
+                        .Append(outRect.Type)
+                        .Append(" ")
+                        .Append(outRect.Name);
+                }
+
+                newMethodSignature.Append(")");
+
+                output[linesContainingMethodName[0].index] = newMethodSignature.ToString();
+
+                // edit method call to contain out rects
+                var originalMethodCall = linesContainingMethodName[1].line;
+                var newMethodCall = new StringBuilder(originalMethodCall.Substring(0, originalMethodCall.Length - 2));
+                foreach (var rect in outRects)
+                {
+                    newMethodCall
+                        .Append(", out ")
+                        .Append(rect.Name);
+                }
+
+                newMethodCall.Append(");");
+
+                output[linesContainingMethodName[1].index] = newMethodCall.ToString();
             }
         }
     }
