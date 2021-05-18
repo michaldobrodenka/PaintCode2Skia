@@ -563,11 +563,21 @@ namespace PaintCode
 
         public override bool Equals(Object obj)
         {
-            if (!(obj == this))
+            if (!base.Equals(obj))
                 return false;
 
-            PaintCodeGradient other = (PaintCodeGradient)obj;
+            if (!(obj is PaintCodeGradient other))
+                return false;
+
             return Array.Equals(this.colors, other.colors) && Array.Equals(this.positions, other.positions);
+        }
+
+        public override int GetHashCode()
+        {
+            var h1 = this.colors?.GetHashCode() ?? 0;
+            var h2 = this.positions?.GetHashCode() ?? 0;
+
+            return (((h1 << 5) + h1) ^ h2);
         }
     }
 

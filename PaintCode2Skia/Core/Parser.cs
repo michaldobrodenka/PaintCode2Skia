@@ -61,7 +61,7 @@ namespace PaintCode2Skia.Core
             {".setStyle(Paint.Style.FILL)", ".Style = SKPaintStyle.Fill" },
             {"Path.addRect", "Path.AddRect" },
             {"Path.addArc", "Path.AddArc" },
-            {"Path.addRoundRect","Path.AddRoundedRect" },
+            {"Path.addRoundRect","Path.AddRoundRect" },
             {"s.clipPath", "s.ClipPath" },
             {"Path.addOval", "Path.AddOval" },
             {"Path.close()", "Path.Close()" },
