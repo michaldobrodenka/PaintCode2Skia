@@ -755,7 +755,7 @@ namespace PaintCode2Skia.Core
                 this.currentContext.FilePart = FilePart.CacheClass;
                 //this.currentContext.CurrentNestedClassName 
             }
-            else if (trimmedLine.StartsWith("public static void"))
+            else if (trimmedLine.StartsWith("public static void") || trimmedLine.StartsWith("private static void"))
             {
                 var firstBracketIndex = line.IndexOf('(');
                 var parametersStr = line.Remove(0, firstBracketIndex + 1);
