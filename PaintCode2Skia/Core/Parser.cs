@@ -462,7 +462,7 @@ namespace PaintCode2Skia.Core
                 {
                     this.currentContext.CurrentMethodLines.Add(line.ReplaceFirst("Path ", "SKPath "));
                 }
-                else if (trimmedLine.StartsWith("int ") && (trimmedLine.Contains(" = Color.argb") || trimmedLine.Contains("Color")))
+                else if (trimmedLine.StartsWith("int ") && (trimmedLine.Contains(" = Color.argb") || trimmedLine.ToLower().Contains("color")))
                 {
                     this.currentContext.CurrentMethodLines.Add(line.Replace("int ", "SKColor ")
                         .Replace(" = Color.argb", " = Helpers.ColorFromArgb").Replace("(int)", "(byte)"));
@@ -783,7 +783,7 @@ namespace PaintCode2Skia.Core
                     if (dataTypesMap.ContainsKey(components[0]))
                         components[0] = dataTypesMap[components[0]];
 
-                    if (components[0] == "int" && components[1].Contains("Color"))
+                    if (components[0] == "int" && components[1].ToLower().Contains("color"))
                     {
                         components[0] = "SKColor";
                     }
