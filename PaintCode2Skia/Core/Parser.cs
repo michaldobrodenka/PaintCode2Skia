@@ -108,7 +108,7 @@ namespace PaintCode2Skia.Core
             {"Layout.Alignment.ALIGN_NORMAL", "SKTextAlign.Left"},
             {"Layout.Alignment.ALIGN_OPPOSITE", "SKTextAlign.Right"},
             {"String.valueOf(", "Helpers.StringValueOf(" },
-            {".postRotate(", " = SKMatrix.MakeRotationDegrees(" },
+            {".postRotate(", " = SKMatrix.CreateRotationDegrees(" },
             {".transform(",".Transform("},
             {".invert(",".TryInvert(out " },
             {"(int) (Color.alpha", "(byte) (Color.alpha" },
@@ -532,6 +532,15 @@ namespace PaintCode2Skia.Core
 
                     this.currentContext.CurrentMethodLines.Add(newLine.Replace("));", ");"));
                 }
+                else if (trimmedLine.Contains(".setPathEffect("))
+                {
+                    var newLine = line.Replace(".setPathEffect(", ".PathEffect = ").ReplaceAll(simpleCommandsMap).ReplaceAll(gettersMap);
+
+                    if (!line.Contains("));"))
+                        this.currentContext.NeedToReplaceTwoBrackets = true;
+
+                    this.currentContext.CurrentMethodLines.Add(newLine.Replace("));", ");"));
+                }
                 else if (trimmedLine.Contains(".setTextSize("))
                 {
                     this.currentContext.CurrentMethodLines.Add(line.ReplaceFirst(".setTextSize(", ".TextSize = ").Replace(")", ""));
@@ -692,6 +701,10 @@ namespace PaintCode2Skia.Core
                     break;
 
                 case "PaintCodeLinearGradient":
+                    this.output.Add(line.Replace("private static", "public static"));
+                    break;
+
+                case "PaintCodeDashPathEffect":
                     this.output.Add(line.Replace("private static", "public static"));
                     break;
 
