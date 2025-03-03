@@ -726,7 +726,7 @@ namespace PaintCode2Skia.Core
 
                     //private static PaintCodeShadow shadow = new PaintCodeShadow();
                 default:
-                    Console.WriteLine("ERROR: Unknon data type in cache class:" + type);
+                    Console.WriteLine("ERROR: Unknown data type in cache class:" + type);
                     break;
             }
         }
