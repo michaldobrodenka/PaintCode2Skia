@@ -8,3 +8,4 @@
 /Sample/PaintCodeResources/bin/*
 /Sample/PaintCodeResources/obj/*
 .vs/
+*.csproj.user
