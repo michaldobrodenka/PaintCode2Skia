@@ -1,4 +1,4 @@
-﻿using SkiaSharp;
+using SkiaSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -115,7 +115,7 @@ namespace PaintCode
             var assembly = Assembly.GetExecutingAssembly();
 
             var stream = assembly.GetManifestResourceStream("PaintCodeResources.Fonts." + fullFontName);
-            
+
             if (stream == null)
             {
                 if (typefaceCache.Count != 0)
@@ -124,10 +124,12 @@ namespace PaintCode
                 stream = assembly.GetManifestResourceStream("PaintCodeResources.Fonts.SF-UI-Display-Regular.otf");
             }
 
-            if (stream == null)
-                return null;
+            // Never hand back null: SKFont.Typeface = null clears the font's default typeface and
+            // the text then silently renders as nothing. A wrong font is a far better failure.
+            result = stream == null ? null : SKTypeface.FromStream(stream);
 
-            result = SKTypeface.FromStream(stream);
+            if (result == null)
+                result = SKTypeface.Default;
 
             typefaceCache[fullFontName] = result;
 
@@ -145,6 +147,7 @@ namespace PaintCode
         private SKTextAlign alignment;
         private string source;
         private SKPaint paint;
+        private SKFont font;
 
         private SKRect textRect;
         private SKPath textPath;
@@ -156,28 +159,33 @@ namespace PaintCode
             return this.fontMetrics.CapHeight;
         }
 
-        public StaticLayout(string source, SKPaint paint, int width, SKTextAlign alignment)
+        // SkiaSharp 4 keeps the text state (typeface, size, ...) on SKFont rather than SKPaint, so a
+        // PaintCode TextPaint maps onto the pair.
+        public StaticLayout(string source, SKPaint paint, int width, SKTextAlign alignment, SKFont font)
         {
             this.source = source;
             this.paint = paint;
             this.width = width;
             this.alignment = alignment;
+            this.font = font;
 
-            paint.MeasureText(source, ref this.textRect);
-            paint.GetFontMetrics(out fontMetrics);
+            this.font.MeasureText(source, out this.textRect, this.paint);
+            this.font.GetFontMetrics(out this.fontMetrics);
         }
 
         public void draw(SKCanvas canvas)
         {
-            this.paint.TextAlign = this.alignment;
-
             if (this.textPath == null)
             {
-                textPath = new SKPath();
-                textPath.AddPoly(new SKPoint[] { new SKPoint(0, this.fontMetrics.CapHeight), new SKPoint(this.width, this.fontMetrics.CapHeight) }, false);
+                using (var builder = new SKPathBuilder())
+                {
+                    builder.AddPoly(new SKPoint[] { new SKPoint(0, this.fontMetrics.CapHeight), new SKPoint(this.width, this.fontMetrics.CapHeight) }, false);
+                    this.textPath = builder.Snapshot();
+                }
             }
 
-            canvas.DrawTextOnPath(source, textPath, 0, 0, this.paint);
+            // SkiaSharp 4: the alignment is an argument of the draw call, it is no longer paint state.
+            canvas.DrawTextOnPath(this.source, this.textPath, 0, 0, this.alignment, this.font, this.paint);
         }
 
         #region IDisposable Support
@@ -217,7 +225,12 @@ namespace PaintCode
 
     public static class Extensions
     {
-        public static void AddRoundedRect(this SKPath path, SKRect rectangleRect, float[] rectangleCornerRadii, SKPathDirection direction)
+        /// <summary>
+        /// PaintCode emits addRoundRect(rect, float[8] radii, dir), which has no Skia equivalent -
+        /// SKPathBuilder.AddRoundRect only takes a uniform rx/ry. The name matches the transpiler's
+        /// Path.addRoundRect mapping, so the generated call sites bind here.
+        /// </summary>
+        public static void AddRoundRect(this SKPathBuilder path, SKRect rectangleRect, float[] rectangleCornerRadii, SKPathDirection direction)
         {
             if (rectangleCornerRadii[0] == 0f)
             {
@@ -255,14 +268,6 @@ namespace PaintCode
             {
                 path.ArcTo(rectangleRect.Left, rectangleRect.Bottom, rectangleRect.Left, rectangleRect.Top, rectangleCornerRadii[6]);
             }
-        }
-
-        public static void Reset(this SKPaint paint)
-        {
-            paint.BlendMode = SKBlendMode.SrcOver;
-            paint.Shader = null;
-            paint.Color = SKColors.Black;
-            paint.MaskFilter = null;
         }
 
         public static void mapPoints(this SKMatrix matrix, float[] points)
@@ -347,6 +352,54 @@ namespace PaintCode
         #endregion
     }
 
+    /// <summary>
+    /// Parser.cs emits cache entries of this type for PaintCode dashed strokes.
+    /// </summary>
+    public class PaintCodeDashPathEffect : IDisposable
+    {
+        private SKPathEffect effect;
+        private float dash, gap, phase;
+
+        public SKPathEffect get(float dash, float gap, float phase)
+        {
+            if (this.effect == null || this.dash != dash || this.gap != gap || this.phase != phase)
+            {
+                if (this.effect != null)
+                    this.effect.Dispose();
+
+                this.dash = dash;
+                this.gap = gap;
+                this.phase = phase;
+                this.effect = SKPathEffect.CreateDash(new float[] { dash, gap }, phase);
+            }
+
+            return this.effect;
+        }
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    if (this.effect != null)
+                        this.effect.Dispose();
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+        #endregion
+    }
+
     public class PaintCodeStaticLayout : IDisposable
     {
         private StaticLayout layout;
@@ -354,10 +407,11 @@ namespace PaintCode
         private SKTextAlign alignment;
         private string source;
         private SKPaint paint;
+        private SKFont font;
 
-        public StaticLayout get(int width, SKTextAlign alignment, string source, SKPaint paint)
+        public StaticLayout get(int width, SKTextAlign alignment, string source, SKPaint paint, SKFont font)
         {
-            if (this.layout == null || this.width != width || this.alignment != alignment || !this.source.Equals(source) || !this.paint.Equals(paint))
+            if (this.layout == null || this.width != width || this.alignment != alignment || !this.source.Equals(source) || !this.paint.Equals(paint) || !this.font.Equals(font))
             {
                 if (this.layout != null)
                 {
@@ -368,7 +422,8 @@ namespace PaintCode
                 this.alignment = alignment;
                 this.source = source;
                 this.paint = paint;
-                this.layout = new StaticLayout(source, paint, width, alignment);
+                this.font = font;
+                this.layout = new StaticLayout(source, paint, width, alignment, font);
             }
             return this.layout;
         }
