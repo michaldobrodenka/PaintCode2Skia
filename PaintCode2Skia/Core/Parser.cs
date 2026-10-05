@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace PaintCode2Skia.Core
 {
@@ -24,10 +25,12 @@ namespace PaintCode2Skia.Core
         private static readonly Dictionary<string, string> dataTypesMap = new Dictionary<string, string>()
         {
             { "Paint", "SKPaint" },
+            { "TextPaint", "SKPaint" }, // the SKFont half travels alongside, see TextPaintsInMethod
             { "Canvas", "SKCanvas" },
             { "RectF", "SKRect" },
             { "boolean", "bool" },
             { "PointF", "SKPoint" },
+            { "Path", "SKPath" }, // a path taken as a parameter is finished geometry, not a builder
             //{ "Context", "IFontProvider" }
         };
 
@@ -109,7 +112,7 @@ namespace PaintCode2Skia.Core
             {"Layout.Alignment.ALIGN_OPPOSITE", "SKTextAlign.Right"},
             {"String.valueOf(", "Helpers.StringValueOf(" },
             {".postRotate(", " = SKMatrix.CreateRotationDegrees(" },
-            {".transform(",".Transform("},
+            {".transform(",".Transform(in "}, // SKPath.Transform(SKMatrix) by value is an error in SkiaSharp 4
             {".invert(",".TryInvert(out " },
             {"(int) (Color.alpha", "(byte) (Color.alpha" },
             //{".computeBounds",  }
@@ -126,6 +129,144 @@ namespace PaintCode2Skia.Core
             Method,
             AfterMainClass,
             InAuxClass
+        }
+
+        /// <summary>
+        /// SkiaSharp 4 builds geometry with SKPathBuilder but draws SKPath, so every path variable
+        /// lives in two halves: the cached builder it is constructed through, and the SKPath that
+        /// Detach() hands over once the shape is finished.
+        /// </summary>
+        private class PathVar
+        {
+            public string BuilderName;
+
+            public bool Declared;    // "SKPath x = ..." has already been emitted once
+
+            public bool NeedsDetach; // the builder holds geometry that has not been handed over yet
+
+            // Almost every PaintCode path is pure geometry: the resizing is applied to the canvas,
+            // not baked into the coordinates, so the shape is the same on every call. Such a path is
+            // built once and kept, which removes the rebuild and the per-draw SKPath allocation.
+            public bool Constant = true;
+
+            public string CacheSource;  // "CacheForY.xPath", or null for a path made with new Path()
+
+            public List<string> BuildLines = new List<string>();
+
+            public string Indent = "        ";
+        }
+
+        // Everything that mutates a path. These are obsolete on SKPath in SkiaSharp 4, so they have
+        // to go to the builder; anything else (Transform, ComputeTightBounds, DrawPath, ClipPath) is
+        // ordinary non-obsolete SKPath API and runs on the detached path.
+        private static readonly HashSet<string> pathBuildMembers = new HashSet<string>()
+        {
+            "Reset", "Rewind", "MoveTo", "LineTo", "CubicTo", "QuadTo", "ConicTo", "ArcTo", "Close",
+            "RMoveTo", "RLineTo", "RCubicTo", "RQuadTo", "RConicTo", "RArcTo",
+            "AddRect", "AddOval", "AddArc", "AddCircle", "AddPoly", "AddPath", "AddRoundRect",
+            "FillType",
+        };
+
+        // An identifier that is not preceded by a digit, dot or word character, so the "f" of "3.5f"
+        // contributes nothing and "SKPathDirection.Clockwise" contributes only "SKPathDirection".
+        private static readonly Regex identifierRegex = new Regex(@"(?<![A-Za-z0-9_.])[A-Za-z_][A-Za-z0-9_]*");
+
+        // Identifiers that never make an expression vary between calls. Math is here because its
+        // arguments are tokenised separately, so Math.Min(a, b) is constant exactly when a and b are.
+        private static readonly HashSet<string> alwaysConstantIdentifiers = new HashSet<string>()
+        {
+            "new", "true", "false", "null", "Math", "var", "float", "int", "bool", "double",
+        };
+
+        // Where each cached path was declared in the output, so the declaration can be rewritten from
+        // SKPathBuilder to SKPath once the method body has shown the geometry to be constant.
+        private readonly Dictionary<string, int> pathCacheLineIndex = new Dictionary<string, int>();
+
+        private string currentCacheClassName;
+
+        /// <summary>
+        /// True when every identifier in the expression is a literal, an SkiaSharp type or enum, or a
+        /// local already known to be constant. Anything unrecognised counts as varying, so a path is
+        /// only ever cached when it is provably safe: a false negative costs a rebuild, a false
+        /// positive would freeze a shape that is supposed to move.
+        /// </summary>
+        private bool IsConstantExpression(string expression)
+        {
+            foreach (Match match in identifierRegex.Matches(expression ?? String.Empty))
+            {
+                var identifier = match.Value;
+
+                if (alwaysConstantIdentifiers.Contains(identifier))
+                    continue;
+
+                if (identifier.StartsWith("SK"))
+                    continue;
+
+                if (this.currentContext.ConstLocalsInMethod.Contains(identifier))
+                    continue;
+
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// The part of a builder call that carries geometry: the arguments of "AddOval(rect, dir);"
+        /// or the right hand side of "FillType = SKPathFillType.EvenOdd;".
+        /// </summary>
+        private static string ArgumentsOf(string call)
+        {
+            var bracket = call.IndexOf('(');
+
+            if (bracket >= 0)
+            {
+                var close = call.LastIndexOf(')');
+                return close > bracket ? call.Substring(bracket + 1, close - bracket - 1) : call.Substring(bracket + 1);
+            }
+
+            var equals = call.IndexOf('=');
+
+            return equals >= 0 ? call.Substring(equals + 1) : String.Empty;
+        }
+
+        /// <summary>
+        /// Records whether a local declared in the method body is constant, so that later path
+        /// geometry built from it can be classified.
+        /// </summary>
+        private void TrackConstLocal(string trimmedLine)
+        {
+            var equals = trimmedLine.IndexOf('=');
+
+            if (equals < 0 || trimmedLine.Contains("(") && trimmedLine.IndexOf('(') < equals)
+                return;
+
+            var declaration = trimmedLine.Substring(0, equals).Trim();
+            var words = declaration.Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+
+            if (words.Length != 2)
+                return;
+
+            var name = words[1];
+            var value = trimmedLine.Substring(equals + 1).TrimEnd(';', ' ', '\t');
+
+            if (IsConstantExpression(value))
+                this.currentContext.ConstLocalsInMethod.Add(name);
+            else
+                this.currentContext.ConstLocalsInMethod.Remove(name);
+        }
+
+        /// <summary>
+        /// A PaintCode TextPaint, which in SkiaSharp 4 is an SKPaint plus the SKFont carrying the
+        /// typeface and size.
+        /// </summary>
+        private class TextPaintVar
+        {
+            public string FontName;
+
+            public string FontSource; // the cache expression the font is fetched from
+
+            public bool FontDeclared;
         }
 
         private class Context
@@ -167,6 +308,13 @@ namespace PaintCode2Skia.Core
             public List<Tuple<int, string>> DisposablesInCurrentMethodAtNesting = new List<Tuple<int, string>>();
 
             public int CurrentTempPaintsForSaveLayerAlpha = 0;
+
+            public Dictionary<string, PathVar> PathsInMethod { get; } = new Dictionary<string, PathVar>();
+
+            // Locals whose value is the same on every call, so a path built from them is constant.
+            public HashSet<string> ConstLocalsInMethod { get; } = new HashSet<string>();
+
+            public Dictionary<string, TextPaintVar> TextPaintsInMethod { get; } = new Dictionary<string, TextPaintVar>();
         }
 
         private struct OutRectInfo
@@ -405,6 +553,13 @@ namespace PaintCode2Skia.Core
 
                         signature += ")";
 
+                        // Anything still registered was made at method-body level, so this is the
+                        // last point at which it can be handed back.
+                        foreach (var disposable in this.currentContext.DisposablesInCurrentMethodAtNesting)
+                            this.currentContext.CurrentMethodLines.Add("        " + disposable.Item2 + ".Dispose();");
+
+                        this.currentContext.DisposablesInCurrentMethodAtNesting.Clear();
+
                         this.output.Add(signature);
                         this.output.AddRange(this.currentContext.CurrentMethodLines);
                         this.output.Add("    }");
@@ -460,7 +615,34 @@ namespace PaintCode2Skia.Core
                 }
                 else if (trimmedLine.StartsWith("Path "))
                 {
-                    this.currentContext.CurrentMethodLines.Add(line.ReplaceFirst("Path ", "SKPath "));
+                    // "Path xPath = CacheForY.xPath;" -> the cache holds the builder, so the local
+                    // becomes xPathBuilder; the SKPath named xPath appears at the first use.
+                    var name = trimmedLine.Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries)[1];
+                    var builderName = name + "Builder";
+
+                    // The source of the path, either a cache slot or a fresh "new Path()".
+                    var source = trimmedLine.Substring(trimmedLine.IndexOf('=') + 1).Trim().TrimEnd(';').Trim();
+
+                    if (this.currentContext.PathsInMethod.TryGetValue(name, out var existing))
+                    {
+                        // re-assigned later in the same method - start a second shape under the same name
+                        existing.NeedsDetach = false;
+                        existing.Constant = false; // two shapes in one call cannot both be the cached one
+                        existing.BuildLines.Clear();
+                    }
+                    else
+                    {
+                        this.currentContext.PathsInMethod[name] = new PathVar()
+                        {
+                            BuilderName = builderName,
+                            CacheSource = source.StartsWith("Cache") ? source : null,
+                            Constant = source.StartsWith("Cache"),
+                            Indent = line.Substring(0, line.Length - line.TrimStart().Length),
+                        };
+                    }
+
+                    // Nothing is emitted here. The build calls are buffered and written out at the
+                    // point the finished path is first used, in whichever of the two shapes applies.
                 }
                 else if (trimmedLine.StartsWith("int ") && (trimmedLine.Contains(" = Color.argb") || trimmedLine.ToLower().Contains("color")))
                 {
@@ -482,7 +664,13 @@ namespace PaintCode2Skia.Core
                 {
                     var rectName = trimmedLine.Split('.')[0];
 
-                    this.currentContext.CurrentMethodLines.Add(("        var " + rectName + " = new SKRect" + trimmedLine.Remove(0, trimmedLine.IndexOf('('))).ReplaceAll(gettersMap).ReplaceAll(simpleCommandsMap));
+                    var rectLine = ("        var " + rectName + " = new SKRect" + trimmedLine.Remove(0, trimmedLine.IndexOf('('))).ReplaceAll(gettersMap).ReplaceAll(simpleCommandsMap);
+
+                    // These rects carry most of the path geometry, so whether they are constant
+                    // decides whether the paths built from them can be cached.
+                    this.TrackConstLocal(rectLine.Trim());
+
+                    this.currentContext.CurrentMethodLines.Add(rectLine);
                     //this.currentContext.CurrentMethodLines.Add("        var " + trimmedLine.Split('.')[0] + " = new SKRect(" + trimmedLine.Split('(')[1]);
 
                     if (rectName.StartsWith("embed"))
@@ -504,7 +692,7 @@ namespace PaintCode2Skia.Core
                 }
                 else if (trimmedLine.Contains(".setTypeface(Typeface.createFromAsset(context.getAssets(), "))
                 {
-                    this.currentContext.CurrentMethodLines.Add(line.Replace(".setTypeface(Typeface.createFromAsset(context.getAssets(), ", ".Typeface = TypefaceManager.GetTypeface(").Replace("));", ");"));
+                    this.AddTextFontLine(line.Replace(".setTypeface(Typeface.createFromAsset(context.getAssets(), ", ".Typeface = TypefaceManager.GetTypeface(").Replace("));", ");"), trimmedLine);
                 }
                 else if (trimmedLine.Contains(" new PaintCodeGradient") && trimmedLine.Contains("new int[]"))
                 {
@@ -512,6 +700,20 @@ namespace PaintCode2Skia.Core
                 }
                 else if (trimmedLine.Contains("TextPaint "))
                 {
+                    // "TextPaint xTextPaint = CacheForY.xTextPaint;" - remember where the matching
+                    // SKFont comes from; it is declared lazily at the first typeface/size assignment.
+                    var name = trimmedLine.ReplaceFirst("TextPaint ", String.Empty).Split(new char[] { ' ', '\t', '=' }, StringSplitOptions.RemoveEmptyEntries)[0];
+                    var fontName = FontNameFor(name);
+
+                    var equals = trimmedLine.IndexOf('=');
+                    var source = equals < 0 ? String.Empty : trimmedLine.Substring(equals + 1).Trim().TrimEnd(';').Trim();
+
+                    this.currentContext.TextPaintsInMethod[name] = new TextPaintVar()
+                    {
+                        FontName = fontName,
+                        FontSource = source.Contains("new ") ? "new SKFont()" : source.ReplaceFirst(name, fontName),
+                    };
+
                     this.currentContext.CurrentMethodLines.Add(line.ReplaceFirst("TextPaint ", "var "));
                 }
                 else if (trimmedLine.Contains(".colorByChangingAlpha("))
@@ -543,7 +745,10 @@ namespace PaintCode2Skia.Core
                 }
                 else if (trimmedLine.Contains(".setTextSize("))
                 {
-                    this.currentContext.CurrentMethodLines.Add(line.ReplaceFirst(".setTextSize(", ".TextSize = ").Replace(")", ""));
+                    // on an SKFont the property is Size; SKPaint.TextSize is obsolete in SkiaSharp 4
+                    var isFont = this.currentContext.TextPaintsInMethod.ContainsKey(trimmedLine.Split('.')[0]);
+
+                    this.AddTextFontLine(line.ReplaceFirst(".setTextSize(", isFont ? ".Size = " : ".TextSize = ").Replace(")", ""), trimmedLine);
                 }
                 else if (trimmedLine.Contains(".setStrokeWidth("))
                 {
@@ -596,7 +801,7 @@ namespace PaintCode2Skia.Core
                     var bounds = parametersStr.Split(',')[0];
                     var path = trimmedLine.Split('.')[0];
                     var newLine = "        var " + bounds + " = " + path + ".ComputeTightBounds();";
-                    this.currentContext.CurrentMethodLines.Add(newLine);
+                    this.AddMethodLine(newLine);
                 }
                 else if (trimmedLine.Contains("Matrix"))
                 {
@@ -617,6 +822,24 @@ namespace PaintCode2Skia.Core
                 {
                     this.currentContext.CurrentMethodLines.Add("// " + line + " // skipping - we do not support Matrix yet");
                 }
+                else if (trimmedLine.Contains("StaticLayout ") && trimmedLine.Contains(".get("))
+                {
+                    // the layout needs the SKFont alongside the SKPaint now
+                    var newLine = line.ReplaceAll(simpleCommandsMap).ReplaceAll(gettersMap);
+
+                    foreach (var textPaint in this.currentContext.TextPaintsInMethod)
+                    {
+                        var tail = textPaint.Key + ");";
+
+                        if (newLine.TrimEnd().EndsWith(tail))
+                        {
+                            newLine = newLine.ReplaceFirst(tail, textPaint.Key + ", " + textPaint.Value.FontName + ");");
+                            break;
+                        }
+                    }
+
+                    this.AddMethodLine(newLine);
+                }
                 else if (trimmedLine == "}")
                 {
                     this.currentContext.NeedToReplaceTwoBrackets = false;
@@ -624,9 +847,213 @@ namespace PaintCode2Skia.Core
                 }
                 else
                 {
-                    this.currentContext.CurrentMethodLines.Add(line.ReplaceAll(simpleCommandsMap).ReplaceAll(gettersMap));
+                    this.AddMethodLine(line.ReplaceAll(simpleCommandsMap).ReplaceAll(gettersMap));
                 }
             }
+        }
+
+        /// <summary>
+        /// Adds a translated line, keeping the builder/path split straight: a construction call is
+        /// retargeted at the cached SKPathBuilder, and the first time a finished shape is used for
+        /// anything else it is detached into a real SKPath under the original variable name.
+        /// </summary>
+        private void AddMethodLine(string line)
+        {
+            this.TrackConstLocal(line.Trim());
+
+            var paths = this.currentContext.PathsInMethod;
+
+            if (paths.Count == 0)
+            {
+                this.currentContext.CurrentMethodLines.Add(line);
+                return;
+            }
+
+            var trimmed = line.TrimStart();
+            var indent = line.Substring(0, line.Length - trimmed.Length);
+
+            // Is this line building one of the tracked paths?
+            string buildReceiver = null;
+            var dot = trimmed.IndexOf('.');
+
+            if (dot > 0)
+            {
+                var receiver = trimmed.Substring(0, dot);
+
+                if (paths.ContainsKey(receiver) && pathBuildMembers.Contains(MemberName(trimmed.Substring(dot + 1))))
+                    buildReceiver = receiver;
+            }
+
+            // Every other path mentioned here is finished and has to become an SKPath first.
+            foreach (var path in paths)
+            {
+                if (path.Key == buildReceiver || !path.Value.NeedsDetach || !ContainsWord(line, path.Key))
+                    continue;
+
+                EmitFinishedPath(path.Key, path.Value, indent);
+            }
+
+            if (buildReceiver != null)
+            {
+                var pathVar = paths[buildReceiver];
+                pathVar.NeedsDetach = true;
+
+                var call = trimmed.Substring(dot + 1);
+
+                // Constant geometry is the whole point of caching the built path, so one varying
+                // argument anywhere in the shape disqualifies it. Only the arguments are tested -
+                // the member name is part of the call, not of the geometry.
+                if (!IsConstantExpression(ArgumentsOf(call)))
+                    pathVar.Constant = false;
+
+                pathVar.BuildLines.Add(call);
+                return;
+            }
+
+            this.currentContext.CurrentMethodLines.Add(line);
+        }
+
+        /// <summary>
+        /// Writes out a path whose geometry is complete, in one of two shapes.
+        ///
+        /// Constant geometry - which is almost all of it, because PaintCode applies the resizing to
+        /// the canvas rather than to the coordinates - is built once and kept in the cache slot, so
+        /// repeat draws do no path work at all. Geometry that depends on the arguments is rebuilt
+        /// through the cached builder as before, and the SKPath that Detach() hands over is disposed
+        /// at the end of the block it was made in.
+        /// </summary>
+        private void EmitFinishedPath(string name, PathVar path, string indent)
+        {
+            var lines = this.currentContext.CurrentMethodLines;
+
+            if (path.Constant && path.CacheSource != null && !path.Declared)
+            {
+                RewritePathCacheDeclaration(path.CacheSource);
+
+                lines.Add(indent + "SKPath " + name + " = " + path.CacheSource + ";");
+                lines.Add(indent + "if (" + name + " == null) {");
+                lines.Add(indent + "    var " + path.BuilderName + " = new SKPathBuilder();");
+
+                foreach (var build in path.BuildLines)
+                {
+                    // A fresh builder needs no clearing, and Reset() would also drop the fill type.
+                    if (build == "Reset();" || build == "Rewind();")
+                        continue;
+
+                    lines.Add(indent + "    " + path.BuilderName + "." + build);
+                }
+
+                lines.Add(indent + "    " + name + " = " + path.CacheSource + " = " + path.BuilderName + ".Detach();");
+                lines.Add(indent + "    " + path.BuilderName + ".Dispose();");
+                lines.Add(indent + "}");
+            }
+            else
+            {
+                // The shape changes from call to call, so it has to be rebuilt every time.
+                lines.Add(indent + (path.Declared ? path.BuilderName : "SKPathBuilder " + path.BuilderName)
+                    + " = " + (path.CacheSource ?? "new SKPathBuilder()") + ";");
+
+                foreach (var build in path.BuildLines)
+                    lines.Add(indent + path.BuilderName + "." + build);
+
+                // A second shape under the same name would leak the first SKPath.
+                if (path.Declared)
+                    lines.Add(indent + name + ".Dispose();");
+
+                lines.Add(indent + (path.Declared ? String.Empty : "SKPath ") + name + " = " + path.BuilderName + ".Detach();");
+
+                // Detach() hands over ownership of a native object that nothing else frees. Leaving
+                // it to the finalizer is measurably slower than disposing it here.
+                if (!path.Declared)
+                    this.currentContext.DisposablesInCurrentMethodAtNesting.Add(
+                        new Tuple<int, string>(this.currentContext.ExtraNestingInMethod, name));
+            }
+
+            path.BuildLines.Clear();
+            path.Declared = true;
+            path.NeedsDetach = false;
+        }
+
+        /// <summary>
+        /// Turns a cache slot that was emitted as a lazily created SKPathBuilder into a plain SKPath
+        /// slot, now that the method body has shown the geometry to be the same on every call.
+        /// </summary>
+        private void RewritePathCacheDeclaration(string cacheSource)
+        {
+            if (!this.pathCacheLineIndex.TryGetValue(cacheSource, out var index))
+                return;
+
+            var name = cacheSource.Substring(cacheSource.IndexOf('.') + 1);
+
+            this.output[index] =
+                $"        private static SKPath {name}_store; public static SKPath {name} {{ get {{ return {name}_store; }} set {{ {name}_store = value; }} }}";
+
+            this.pathCacheLineIndex.Remove(cacheSource);
+        }
+
+        /// <summary>
+        /// Routes a typeface/size assignment at the SKFont half of a PaintCode TextPaint, declaring
+        /// the font local the first time it is needed.
+        /// </summary>
+        private void AddTextFontLine(string translatedLine, string originalTrimmedLine)
+        {
+            var receiver = originalTrimmedLine.Split('.')[0];
+
+            TextPaintVar textPaint;
+            if (!this.currentContext.TextPaintsInMethod.TryGetValue(receiver, out textPaint))
+            {
+                this.currentContext.CurrentMethodLines.Add(translatedLine);
+                return;
+            }
+
+            var trimmed = translatedLine.TrimStart();
+            var indent = translatedLine.Substring(0, translatedLine.Length - trimmed.Length);
+
+            if (!textPaint.FontDeclared)
+            {
+                this.currentContext.CurrentMethodLines.Add(String.Empty);
+                this.currentContext.CurrentMethodLines.Add(indent + "var " + textPaint.FontName + " = " + textPaint.FontSource + ";");
+                textPaint.FontDeclared = true;
+            }
+
+            this.currentContext.CurrentMethodLines.Add(indent + trimmed.ReplaceFirst(receiver, textPaint.FontName));
+        }
+
+        /// <summary>textTextPaint -> textTextFont, matching the cached pair.</summary>
+        private static string FontNameFor(string textPaintName)
+        {
+            return textPaintName.EndsWith("Paint")
+                ? textPaintName.Substring(0, textPaintName.Length - "Paint".Length) + "Font"
+                : textPaintName + "Font";
+        }
+
+        private static string MemberName(string afterDot)
+        {
+            int i = 0;
+            while (i < afterDot.Length && (Char.IsLetterOrDigit(afterDot[i]) || afterDot[i] == '_'))
+                i++;
+
+            return afterDot.Substring(0, i);
+        }
+
+        /// <summary>Whole-word match, so bezierPath does not match inside bezierPathBounds.</summary>
+        private static bool ContainsWord(string line, string word)
+        {
+            int i = 0;
+
+            while ((i = line.IndexOf(word, i, StringComparison.Ordinal)) >= 0)
+            {
+                var before = i == 0 ? ' ' : line[i - 1];
+                var afterIndex = i + word.Length;
+                var after = afterIndex >= line.Length ? ' ' : line[afterIndex];
+
+                if (!Char.IsLetterOrDigit(before) && before != '_' && !Char.IsLetterOrDigit(after) && after != '_')
+                    return true;
+
+                i += word.Length;
+            }
+
+            return false;
         }
 
         private static string NextLine(string[] lines, int i)
@@ -684,12 +1111,21 @@ namespace PaintCode2Skia.Core
                     break;
 
                 case "Path":
-                    this.output.Add($"        private static SKPath {name}_store; public static SKPath {name} {{ get {{ if ({name}_store == null) {name}_store = new SKPath(); return {name}_store; }} }}");
-                    //this.output.Add(line.Replace("private static Path", "private static SKPath").Replace("new Path", "new SKPath"));
+                    // SkiaSharp 4 builds geometry with SKPathBuilder; SKPath itself is snapshot-only now.
+                    // The cache class is emitted before the method that fills it, so this starts as a
+                    // builder and is rewritten to a plain SKPath slot if the geometry turns out to be
+                    // constant. See RewritePathCacheDeclaration.
+                    this.pathCacheLineIndex[this.currentCacheClassName + "." + name] = this.output.Count;
+                    this.output.Add($"        private static SKPathBuilder {name}_store; public static SKPathBuilder {name} {{ get {{ if ({name}_store == null) {name}_store = new SKPathBuilder(); return {name}_store; }} }}");
                     break;
 
                 case "TextPaint":
+                    // SkiaSharp 4 moved the text state (typeface, size, ...) off SKPaint and onto
+                    // SKFont, so one PaintCode TextPaint becomes a cached pair.
                     this.output.Add($"        private static SKPaint {name}_store; public static SKPaint {name} {{ get {{ if ({name}_store == null) {name}_store = new SKPaint(); return {name}_store; }} }}");
+
+                    var fontName = FontNameFor(name);
+                    this.output.Add($"        private static SKFont {fontName}_store; public static SKFont {fontName} {{ get {{ if ({fontName}_store == null) {fontName}_store = new SKFont(); return {fontName}_store; }} }}");
                     break;
 
                 case "PaintCodeStaticLayout":
@@ -764,9 +1200,13 @@ namespace PaintCode2Skia.Core
             {
                 line = line.Replace("private static", "internal static");
 
+                this.currentCacheClassName = trimmedLine
+                    .Split(new char[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries)[3]
+                    .TrimEnd('{').Trim();
+
                 this.output.Add(line);
                 this.currentContext.FilePart = FilePart.CacheClass;
-                //this.currentContext.CurrentNestedClassName 
+                //this.currentContext.CurrentNestedClassName
             }
             else if (trimmedLine.StartsWith("public static void") || trimmedLine.StartsWith("private static void"))
             {
@@ -786,6 +1226,9 @@ namespace PaintCode2Skia.Core
                 this.currentContext.CurrentMethodLines.Clear();
                 this.currentContext.DisposablesInCurrentMethodAtNesting.Clear();
                 this.currentContext.CurrentTempPaintsForSaveLayerAlpha = 0;
+                this.currentContext.PathsInMethod.Clear();
+                this.currentContext.TextPaintsInMethod.Clear();
+                this.currentContext.ConstLocalsInMethod.Clear();
 
                 for (int i = 0; i < parameters.Length; i++)
                 {

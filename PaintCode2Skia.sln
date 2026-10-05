@@ -9,7 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sample", "Sample", "{B9DB81
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PaintCodeResources", "Sample\PaintCodeResources\PaintCodeResources.csproj", "{9620A4A4-E3F1-4E23-A19F-3C812F1BA8C4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaintCodeResources.Sample.WinForms", "Sample\PaintCodeResources.Sample.WinForms\PaintCodeResources.Sample.WinForms.csproj", "{728C2BCE-722C-442D-84C1-18EBC5BFD414}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PaintCodeResources.Sample.WinForms", "Sample\PaintCodeResources.Sample.WinForms\PaintCodeResources.Sample.WinForms.csproj", "{728C2BCE-722C-442D-84C1-18EBC5BFD414}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

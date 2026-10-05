@@ -27,31 +27,35 @@ public class StyleKitName {
     internal static class CacheForClock {
         private static SKPaint paint_store; public static SKPaint paint { get { if (paint_store == null) paint_store = new SKPaint(); return paint_store; } }
         public static SKRect originalFrame = new SKRect(0f, 0f, 260f, 260f);
-        private static SKPath oval2Path_store; public static SKPath oval2Path { get { if (oval2Path_store == null) oval2Path_store = new SKPath(); return oval2Path_store; } }
-        private static SKPath ovalPath_store; public static SKPath ovalPath { get { if (ovalPath_store == null) ovalPath_store = new SKPath(); return ovalPath_store; } }
-        private static SKPath textPath_store; public static SKPath textPath { get { if (textPath_store == null) textPath_store = new SKPath(); return textPath_store; } }
-        private static SKPath bezierPath_store; public static SKPath bezierPath { get { if (bezierPath_store == null) bezierPath_store = new SKPath(); return bezierPath_store; } }
-        private static SKPath bezier2Path_store; public static SKPath bezier2Path { get { if (bezier2Path_store == null) bezier2Path_store = new SKPath(); return bezier2Path_store; } }
-        private static SKPath bezier3Path_store; public static SKPath bezier3Path { get { if (bezier3Path_store == null) bezier3Path_store = new SKPath(); return bezier3Path_store; } }
-        private static SKPath rectanglePath_store; public static SKPath rectanglePath { get { if (rectanglePath_store == null) rectanglePath_store = new SKPath(); return rectanglePath_store; } }
-        private static SKPath rectangle2Path_store; public static SKPath rectangle2Path { get { if (rectangle2Path_store == null) rectangle2Path_store = new SKPath(); return rectangle2Path_store; } }
-        private static SKPath rectangle3Path_store; public static SKPath rectangle3Path { get { if (rectangle3Path_store == null) rectangle3Path_store = new SKPath(); return rectangle3Path_store; } }
-        private static SKPath rectangle4Path_store; public static SKPath rectangle4Path { get { if (rectangle4Path_store == null) rectangle4Path_store = new SKPath(); return rectangle4Path_store; } }
-        private static SKPath rectangle5Path_store; public static SKPath rectangle5Path { get { if (rectangle5Path_store == null) rectangle5Path_store = new SKPath(); return rectangle5Path_store; } }
-        private static SKPath rectangle6Path_store; public static SKPath rectangle6Path { get { if (rectangle6Path_store == null) rectangle6Path_store = new SKPath(); return rectangle6Path_store; } }
-        private static SKPath rectangle7Path_store; public static SKPath rectangle7Path { get { if (rectangle7Path_store == null) rectangle7Path_store = new SKPath(); return rectangle7Path_store; } }
-        private static SKPath rectangle8Path_store; public static SKPath rectangle8Path { get { if (rectangle8Path_store == null) rectangle8Path_store = new SKPath(); return rectangle8Path_store; } }
-        private static SKPath rectangle9Path_store; public static SKPath rectangle9Path { get { if (rectangle9Path_store == null) rectangle9Path_store = new SKPath(); return rectangle9Path_store; } }
-        private static SKPath rectangle10Path_store; public static SKPath rectangle10Path { get { if (rectangle10Path_store == null) rectangle10Path_store = new SKPath(); return rectangle10Path_store; } }
-        private static SKPath rectangle11Path_store; public static SKPath rectangle11Path { get { if (rectangle11Path_store == null) rectangle11Path_store = new SKPath(); return rectangle11Path_store; } }
-        private static SKPath rectangle12Path_store; public static SKPath rectangle12Path { get { if (rectangle12Path_store == null) rectangle12Path_store = new SKPath(); return rectangle12Path_store; } }
+        private static SKPath oval2Path_store; public static SKPath oval2Path { get { return oval2Path_store; } set { oval2Path_store = value; } }
+        private static SKPath ovalPath_store; public static SKPath ovalPath { get { return ovalPath_store; } set { ovalPath_store = value; } }
+        private static SKPath textPath_store; public static SKPath textPath { get { return textPath_store; } set { textPath_store = value; } }
+        private static SKPath bezierPath_store; public static SKPath bezierPath { get { return bezierPath_store; } set { bezierPath_store = value; } }
+        private static SKPath bezier2Path_store; public static SKPath bezier2Path { get { return bezier2Path_store; } set { bezier2Path_store = value; } }
+        private static SKPath bezier3Path_store; public static SKPath bezier3Path { get { return bezier3Path_store; } set { bezier3Path_store = value; } }
+        private static SKPath rectanglePath_store; public static SKPath rectanglePath { get { return rectanglePath_store; } set { rectanglePath_store = value; } }
+        private static SKPath rectangle2Path_store; public static SKPath rectangle2Path { get { return rectangle2Path_store; } set { rectangle2Path_store = value; } }
+        private static SKPath rectangle3Path_store; public static SKPath rectangle3Path { get { return rectangle3Path_store; } set { rectangle3Path_store = value; } }
+        private static SKPath rectangle4Path_store; public static SKPath rectangle4Path { get { return rectangle4Path_store; } set { rectangle4Path_store = value; } }
+        private static SKPath rectangle5Path_store; public static SKPath rectangle5Path { get { return rectangle5Path_store; } set { rectangle5Path_store = value; } }
+        private static SKPath rectangle6Path_store; public static SKPath rectangle6Path { get { return rectangle6Path_store; } set { rectangle6Path_store = value; } }
+        private static SKPath rectangle7Path_store; public static SKPath rectangle7Path { get { return rectangle7Path_store; } set { rectangle7Path_store = value; } }
+        private static SKPath rectangle8Path_store; public static SKPath rectangle8Path { get { return rectangle8Path_store; } set { rectangle8Path_store = value; } }
+        private static SKPath rectangle9Path_store; public static SKPath rectangle9Path { get { return rectangle9Path_store; } set { rectangle9Path_store = value; } }
+        private static SKPath rectangle10Path_store; public static SKPath rectangle10Path { get { return rectangle10Path_store; } set { rectangle10Path_store = value; } }
+        private static SKPath rectangle11Path_store; public static SKPath rectangle11Path { get { return rectangle11Path_store; } set { rectangle11Path_store = value; } }
+        private static SKPath rectangle12Path_store; public static SKPath rectangle12Path { get { return rectangle12Path_store; } set { rectangle12Path_store = value; } }
         private static SKPaint text2TextPaint_store; public static SKPaint text2TextPaint { get { if (text2TextPaint_store == null) text2TextPaint_store = new SKPaint(); return text2TextPaint_store; } }
+        private static SKFont text2TextFont_store; public static SKFont text2TextFont { get { if (text2TextFont_store == null) text2TextFont_store = new SKFont(); return text2TextFont_store; } }
         private static PaintCodeStaticLayout text2StaticLayout_store; public static PaintCodeStaticLayout text2StaticLayout { get { if (text2StaticLayout_store == null) text2StaticLayout_store = new PaintCodeStaticLayout(); return text2StaticLayout_store; } }
         private static SKPaint text3TextPaint_store; public static SKPaint text3TextPaint { get { if (text3TextPaint_store == null) text3TextPaint_store = new SKPaint(); return text3TextPaint_store; } }
+        private static SKFont text3TextFont_store; public static SKFont text3TextFont { get { if (text3TextFont_store == null) text3TextFont_store = new SKFont(); return text3TextFont_store; } }
         private static PaintCodeStaticLayout text3StaticLayout_store; public static PaintCodeStaticLayout text3StaticLayout { get { if (text3StaticLayout_store == null) text3StaticLayout_store = new PaintCodeStaticLayout(); return text3StaticLayout_store; } }
         private static SKPaint text4TextPaint_store; public static SKPaint text4TextPaint { get { if (text4TextPaint_store == null) text4TextPaint_store = new SKPaint(); return text4TextPaint_store; } }
+        private static SKFont text4TextFont_store; public static SKFont text4TextFont { get { if (text4TextFont_store == null) text4TextFont_store = new SKFont(); return text4TextFont_store; } }
         private static PaintCodeStaticLayout text4StaticLayout_store; public static PaintCodeStaticLayout text4StaticLayout { get { if (text4StaticLayout_store == null) text4StaticLayout_store = new PaintCodeStaticLayout(); return text4StaticLayout_store; } }
         private static SKPaint text13TextPaint_store; public static SKPaint text13TextPaint { get { if (text13TextPaint_store == null) text13TextPaint_store = new SKPaint(); return text13TextPaint_store; } }
+        private static SKFont text13TextFont_store; public static SKFont text13TextFont { get { if (text13TextFont_store == null) text13TextFont_store = new SKFont(); return text13TextFont_store; } }
         private static PaintCodeStaticLayout text13StaticLayout_store; public static PaintCodeStaticLayout text13StaticLayout { get { if (text13StaticLayout_store == null) text13StaticLayout_store = new PaintCodeStaticLayout(); return text13StaticLayout_store; } }
     }
     
@@ -84,14 +88,18 @@ public class StyleKitName {
         canvas.Translate(130f, 130f);
 //         currentTransformation.peek().postTranslate(130f, 130f); // skipping - we do not support Matrix yet
         var oval2Rect = new SKRect(-116f, -116f, 116f, 116f);
-        SKPath oval2Path = CacheForClock.oval2Path;
-        oval2Path.Reset();
-        oval2Path.AddOval(oval2Rect, SKPathDirection.Clockwise);
         
         paint.Reset();
         paint.IsAntialias = true;
         paint.Style = SKPaintStyle.Fill;
         paint.Color = (SKColor)rimColor;
+        SKPath oval2Path = CacheForClock.oval2Path;
+        if (oval2Path == null) {
+            var oval2PathBuilder = new SKPathBuilder();
+            oval2PathBuilder.AddOval(oval2Rect, SKPathDirection.Clockwise);
+            oval2Path = CacheForClock.oval2Path = oval2PathBuilder.Detach();
+            oval2PathBuilder.Dispose();
+        }
         canvas.DrawPath(oval2Path, paint);
         canvas.Restore();
         
@@ -100,62 +108,70 @@ public class StyleKitName {
         canvas.Translate(130f, 130f);
 //         currentTransformation.peek().postTranslate(130f, 130f); // skipping - we do not support Matrix yet
         var ovalRect = new SKRect(-110f, -110f, 110f, 110f);
-        SKPath ovalPath = CacheForClock.ovalPath;
-        ovalPath.Reset();
-        ovalPath.AddOval(ovalRect, SKPathDirection.Clockwise);
         
         paint.Reset();
         paint.IsAntialias = true;
         paint.Style = SKPaintStyle.Fill;
         paint.Color = (SKColor)faceColor;
+        SKPath ovalPath = CacheForClock.ovalPath;
+        if (ovalPath == null) {
+            var ovalPathBuilder = new SKPathBuilder();
+            ovalPathBuilder.AddOval(ovalRect, SKPathDirection.Clockwise);
+            ovalPath = CacheForClock.ovalPath = ovalPathBuilder.Detach();
+            ovalPathBuilder.Dispose();
+        }
         canvas.DrawPath(ovalPath, paint);
         canvas.Restore();
         
         // Text
         var textRect = new SKRect(118.48f, 34.85f, 142.5f, 53f);
-        SKPath textPath = CacheForClock.textPath;
-        textPath.Reset();
-        textPath.MoveTo(123.73f, 38.95f);
-        textPath.LineTo(120.23f, 41.82f);
-        textPath.LineTo(118.48f, 39.75f);
-        textPath.LineTo(124f, 35.3f);
-        textPath.LineTo(126.73f, 35.3f);
-        textPath.LineTo(126.73f, 53f);
-        textPath.LineTo(123.73f, 53f);
-        textPath.LineTo(123.73f, 38.95f);
-        textPath.Close();
-        textPath.MoveTo(130.73f, 50.25f);
-        textPath.LineTo(137.55f, 43.55f);
-        textPath.CubicTo(138.1f, 43.02f, 138.54f, 42.48f, 138.86f, 41.94f);
-        textPath.CubicTo(139.19f, 41.4f, 139.35f, 40.78f, 139.35f, 40.07f);
-        textPath.CubicTo(139.35f, 39.24f, 139.08f, 38.58f, 138.54f, 38.09f);
-        textPath.CubicTo(138f, 37.6f, 137.33f, 37.35f, 136.53f, 37.35f);
-        textPath.CubicTo(135.67f, 37.35f, 134.99f, 37.64f, 134.48f, 38.21f);
-        textPath.CubicTo(133.96f, 38.79f, 133.64f, 39.51f, 133.53f, 40.38f);
-        textPath.LineTo(130.6f, 39.92f);
-        textPath.CubicTo(130.68f, 39.19f, 130.89f, 38.52f, 131.23f, 37.9f);
-        textPath.CubicTo(131.56f, 37.28f, 131.98f, 36.75f, 132.5f, 36.3f);
-        textPath.CubicTo(133.02f, 35.85f, 133.62f, 35.5f, 134.31f, 35.24f);
-        textPath.CubicTo(135f, 34.98f, 135.76f, 34.85f, 136.57f, 34.85f);
-        textPath.CubicTo(137.34f, 34.85f, 138.08f, 34.96f, 138.79f, 35.17f);
-        textPath.CubicTo(139.5f, 35.39f, 140.12f, 35.72f, 140.68f, 36.16f);
-        textPath.CubicTo(141.23f, 36.6f, 141.66f, 37.15f, 141.99f, 37.79f);
-        textPath.CubicTo(142.31f, 38.43f, 142.48f, 39.17f, 142.48f, 40.03f);
-        textPath.CubicTo(142.48f, 40.59f, 142.4f, 41.12f, 142.25f, 41.61f);
-        textPath.CubicTo(142.1f, 42.1f, 141.9f, 42.57f, 141.64f, 43f);
-        textPath.CubicTo(141.38f, 43.43f, 141.08f, 43.85f, 140.74f, 44.24f);
-        textPath.CubicTo(140.4f, 44.63f, 140.03f, 45.01f, 139.63f, 45.38f);
-        textPath.LineTo(134.53f, 50.25f);
-        textPath.LineTo(142.5f, 50.25f);
-        textPath.LineTo(142.5f, 53f);
-        textPath.LineTo(130.73f, 53f);
-        textPath.LineTo(130.73f, 50.25f);
-        textPath.Close();
         
         paint.Reset();
         paint.IsAntialias = true;
         paint.Style = SKPaintStyle.Fill;
         paint.Color = (SKColor)numbersColor;
+        SKPath textPath = CacheForClock.textPath;
+        if (textPath == null) {
+            var textPathBuilder = new SKPathBuilder();
+            textPathBuilder.MoveTo(123.73f, 38.95f);
+            textPathBuilder.LineTo(120.23f, 41.82f);
+            textPathBuilder.LineTo(118.48f, 39.75f);
+            textPathBuilder.LineTo(124f, 35.3f);
+            textPathBuilder.LineTo(126.73f, 35.3f);
+            textPathBuilder.LineTo(126.73f, 53f);
+            textPathBuilder.LineTo(123.73f, 53f);
+            textPathBuilder.LineTo(123.73f, 38.95f);
+            textPathBuilder.Close();
+            textPathBuilder.MoveTo(130.73f, 50.25f);
+            textPathBuilder.LineTo(137.55f, 43.55f);
+            textPathBuilder.CubicTo(138.1f, 43.02f, 138.54f, 42.48f, 138.86f, 41.94f);
+            textPathBuilder.CubicTo(139.19f, 41.4f, 139.35f, 40.78f, 139.35f, 40.07f);
+            textPathBuilder.CubicTo(139.35f, 39.24f, 139.08f, 38.58f, 138.54f, 38.09f);
+            textPathBuilder.CubicTo(138f, 37.6f, 137.33f, 37.35f, 136.53f, 37.35f);
+            textPathBuilder.CubicTo(135.67f, 37.35f, 134.99f, 37.64f, 134.48f, 38.21f);
+            textPathBuilder.CubicTo(133.96f, 38.79f, 133.64f, 39.51f, 133.53f, 40.38f);
+            textPathBuilder.LineTo(130.6f, 39.92f);
+            textPathBuilder.CubicTo(130.68f, 39.19f, 130.89f, 38.52f, 131.23f, 37.9f);
+            textPathBuilder.CubicTo(131.56f, 37.28f, 131.98f, 36.75f, 132.5f, 36.3f);
+            textPathBuilder.CubicTo(133.02f, 35.85f, 133.62f, 35.5f, 134.31f, 35.24f);
+            textPathBuilder.CubicTo(135f, 34.98f, 135.76f, 34.85f, 136.57f, 34.85f);
+            textPathBuilder.CubicTo(137.34f, 34.85f, 138.08f, 34.96f, 138.79f, 35.17f);
+            textPathBuilder.CubicTo(139.5f, 35.39f, 140.12f, 35.72f, 140.68f, 36.16f);
+            textPathBuilder.CubicTo(141.23f, 36.6f, 141.66f, 37.15f, 141.99f, 37.79f);
+            textPathBuilder.CubicTo(142.31f, 38.43f, 142.48f, 39.17f, 142.48f, 40.03f);
+            textPathBuilder.CubicTo(142.48f, 40.59f, 142.4f, 41.12f, 142.25f, 41.61f);
+            textPathBuilder.CubicTo(142.1f, 42.1f, 141.9f, 42.57f, 141.64f, 43f);
+            textPathBuilder.CubicTo(141.38f, 43.43f, 141.08f, 43.85f, 140.74f, 44.24f);
+            textPathBuilder.CubicTo(140.4f, 44.63f, 140.03f, 45.01f, 139.63f, 45.38f);
+            textPathBuilder.LineTo(134.53f, 50.25f);
+            textPathBuilder.LineTo(142.5f, 50.25f);
+            textPathBuilder.LineTo(142.5f, 53f);
+            textPathBuilder.LineTo(130.73f, 53f);
+            textPathBuilder.LineTo(130.73f, 50.25f);
+            textPathBuilder.Close();
+            textPath = CacheForClock.textPath = textPathBuilder.Detach();
+            textPathBuilder.Dispose();
+        }
         canvas.DrawPath(textPath, paint);
         
         // Bezier
@@ -165,23 +181,27 @@ public class StyleKitName {
         canvas.RotateDegrees(-(minuteAngle + 90f));
 //         currentTransformation.peek().postRotate(-(minuteAngle + 90f)); // skipping - we do not support Matrix yet
         var bezierRect = new SKRect(-10f, -10f, 95f, 10f);
-        SKPath bezierPath = CacheForClock.bezierPath;
-        bezierPath.Reset();
-        bezierPath.MoveTo(7.07f, -7.07f);
-        bezierPath.CubicTo(8.25f, -5.89f, 9.07f, -4.49f, 9.54f, -3f);
-        bezierPath.LineTo(95f, -3f);
-        bezierPath.LineTo(95f, 3f);
-        bezierPath.LineTo(9.54f, 3f);
-        bezierPath.CubicTo(9.07f, 4.49f, 8.25f, 5.89f, 7.07f, 7.07f);
-        bezierPath.CubicTo(3.17f, 10.98f, -3.17f, 10.98f, -7.07f, 7.07f);
-        bezierPath.CubicTo(-10.98f, 3.17f, -10.98f, -3.17f, -7.07f, -7.07f);
-        bezierPath.CubicTo(-3.17f, -10.98f, 3.17f, -10.98f, 7.07f, -7.07f);
-        bezierPath.Close();
         
         paint.Reset();
         paint.IsAntialias = true;
         paint.Style = SKPaintStyle.Fill;
         paint.Color = (SKColor)darkHandsColor;
+        SKPath bezierPath = CacheForClock.bezierPath;
+        if (bezierPath == null) {
+            var bezierPathBuilder = new SKPathBuilder();
+            bezierPathBuilder.MoveTo(7.07f, -7.07f);
+            bezierPathBuilder.CubicTo(8.25f, -5.89f, 9.07f, -4.49f, 9.54f, -3f);
+            bezierPathBuilder.LineTo(95f, -3f);
+            bezierPathBuilder.LineTo(95f, 3f);
+            bezierPathBuilder.LineTo(9.54f, 3f);
+            bezierPathBuilder.CubicTo(9.07f, 4.49f, 8.25f, 5.89f, 7.07f, 7.07f);
+            bezierPathBuilder.CubicTo(3.17f, 10.98f, -3.17f, 10.98f, -7.07f, 7.07f);
+            bezierPathBuilder.CubicTo(-10.98f, 3.17f, -10.98f, -3.17f, -7.07f, -7.07f);
+            bezierPathBuilder.CubicTo(-3.17f, -10.98f, 3.17f, -10.98f, 7.07f, -7.07f);
+            bezierPathBuilder.Close();
+            bezierPath = CacheForClock.bezierPath = bezierPathBuilder.Detach();
+            bezierPathBuilder.Dispose();
+        }
         canvas.DrawPath(bezierPath, paint);
         canvas.Restore();
         
@@ -192,23 +212,27 @@ public class StyleKitName {
         canvas.RotateDegrees(-(hourAngle + 90f));
 //         currentTransformation.peek().postRotate(-(hourAngle + 90f)); // skipping - we do not support Matrix yet
         var bezier2Rect = new SKRect(-10f, -10f, 56f, 10f);
-        SKPath bezier2Path = CacheForClock.bezier2Path;
-        bezier2Path.Reset();
-        bezier2Path.MoveTo(7.07f, -7.07f);
-        bezier2Path.CubicTo(7.7f, -6.44f, 8.24f, -5.74f, 8.66f, -5f);
-        bezier2Path.LineTo(56f, -5f);
-        bezier2Path.LineTo(56f, 5f);
-        bezier2Path.LineTo(8.66f, 5f);
-        bezier2Path.CubicTo(8.24f, 5.74f, 7.7f, 6.44f, 7.07f, 7.07f);
-        bezier2Path.CubicTo(3.17f, 10.98f, -3.17f, 10.98f, -7.07f, 7.07f);
-        bezier2Path.CubicTo(-10.98f, 3.17f, -10.98f, -3.17f, -7.07f, -7.07f);
-        bezier2Path.CubicTo(-3.17f, -10.98f, 3.17f, -10.98f, 7.07f, -7.07f);
-        bezier2Path.Close();
         
         paint.Reset();
         paint.IsAntialias = true;
         paint.Style = SKPaintStyle.Fill;
         paint.Color = (SKColor)darkHandsColor;
+        SKPath bezier2Path = CacheForClock.bezier2Path;
+        if (bezier2Path == null) {
+            var bezier2PathBuilder = new SKPathBuilder();
+            bezier2PathBuilder.MoveTo(7.07f, -7.07f);
+            bezier2PathBuilder.CubicTo(7.7f, -6.44f, 8.24f, -5.74f, 8.66f, -5f);
+            bezier2PathBuilder.LineTo(56f, -5f);
+            bezier2PathBuilder.LineTo(56f, 5f);
+            bezier2PathBuilder.LineTo(8.66f, 5f);
+            bezier2PathBuilder.CubicTo(8.24f, 5.74f, 7.7f, 6.44f, 7.07f, 7.07f);
+            bezier2PathBuilder.CubicTo(3.17f, 10.98f, -3.17f, 10.98f, -7.07f, 7.07f);
+            bezier2PathBuilder.CubicTo(-10.98f, 3.17f, -10.98f, -3.17f, -7.07f, -7.07f);
+            bezier2PathBuilder.CubicTo(-3.17f, -10.98f, 3.17f, -10.98f, 7.07f, -7.07f);
+            bezier2PathBuilder.Close();
+            bezier2Path = CacheForClock.bezier2Path = bezier2PathBuilder.Detach();
+            bezier2PathBuilder.Dispose();
+        }
         canvas.DrawPath(bezier2Path, paint);
         canvas.Restore();
         
@@ -219,23 +243,27 @@ public class StyleKitName {
         canvas.RotateDegrees(-(secondsAngle + 90f));
 //         currentTransformation.peek().postRotate(-(secondsAngle + 90f)); // skipping - we do not support Matrix yet
         var bezier3Rect = new SKRect(-6f, -6f, 99f, 6f);
-        SKPath bezier3Path = CacheForClock.bezier3Path;
-        bezier3Path.Reset();
-        bezier3Path.MoveTo(4.24f, -4.24f);
-        bezier3Path.CubicTo(5.16f, -3.33f, 5.72f, -2.19f, 5.92f, -1f);
-        bezier3Path.LineTo(99f, -1f);
-        bezier3Path.LineTo(99f, 1f);
-        bezier3Path.LineTo(5.92f, 1f);
-        bezier3Path.CubicTo(5.72f, 2.19f, 5.16f, 3.33f, 4.24f, 4.24f);
-        bezier3Path.CubicTo(1.9f, 6.59f, -1.9f, 6.59f, -4.24f, 4.24f);
-        bezier3Path.CubicTo(-6.59f, 1.9f, -6.59f, -1.9f, -4.24f, -4.24f);
-        bezier3Path.CubicTo(-1.9f, -6.59f, 1.9f, -6.59f, 4.24f, -4.24f);
-        bezier3Path.Close();
         
         paint.Reset();
         paint.IsAntialias = true;
         paint.Style = SKPaintStyle.Fill;
         paint.Color = (SKColor)lightHandColor;
+        SKPath bezier3Path = CacheForClock.bezier3Path;
+        if (bezier3Path == null) {
+            var bezier3PathBuilder = new SKPathBuilder();
+            bezier3PathBuilder.MoveTo(4.24f, -4.24f);
+            bezier3PathBuilder.CubicTo(5.16f, -3.33f, 5.72f, -2.19f, 5.92f, -1f);
+            bezier3PathBuilder.LineTo(99f, -1f);
+            bezier3PathBuilder.LineTo(99f, 1f);
+            bezier3PathBuilder.LineTo(5.92f, 1f);
+            bezier3PathBuilder.CubicTo(5.72f, 2.19f, 5.16f, 3.33f, 4.24f, 4.24f);
+            bezier3PathBuilder.CubicTo(1.9f, 6.59f, -1.9f, 6.59f, -4.24f, 4.24f);
+            bezier3PathBuilder.CubicTo(-6.59f, 1.9f, -6.59f, -1.9f, -4.24f, -4.24f);
+            bezier3PathBuilder.CubicTo(-1.9f, -6.59f, 1.9f, -6.59f, 4.24f, -4.24f);
+            bezier3PathBuilder.Close();
+            bezier3Path = CacheForClock.bezier3Path = bezier3PathBuilder.Detach();
+            bezier3PathBuilder.Dispose();
+        }
         canvas.DrawPath(bezier3Path, paint);
         canvas.Restore();
         
@@ -243,26 +271,34 @@ public class StyleKitName {
         {
             // Rectangle
         var rectangleRect = new SKRect(127f, 20f, 133f, 28f);
-            SKPath rectanglePath = CacheForClock.rectanglePath;
-            rectanglePath.Reset();
-            rectanglePath.AddRect(rectangleRect, SKPathDirection.Clockwise);
             
             paint.Reset();
             paint.IsAntialias = true;
             paint.Style = SKPaintStyle.Fill;
             paint.Color = (SKColor)tickColor;
+            SKPath rectanglePath = CacheForClock.rectanglePath;
+            if (rectanglePath == null) {
+                var rectanglePathBuilder = new SKPathBuilder();
+                rectanglePathBuilder.AddRect(rectangleRect, SKPathDirection.Clockwise);
+                rectanglePath = CacheForClock.rectanglePath = rectanglePathBuilder.Detach();
+                rectanglePathBuilder.Dispose();
+            }
             canvas.DrawPath(rectanglePath, paint);
             
             // Rectangle 2
         var rectangle2Rect = new SKRect(127f, 232f, 133f, 240f);
-            SKPath rectangle2Path = CacheForClock.rectangle2Path;
-            rectangle2Path.Reset();
-            rectangle2Path.AddRect(rectangle2Rect, SKPathDirection.Clockwise);
             
             paint.Reset();
             paint.IsAntialias = true;
             paint.Style = SKPaintStyle.Fill;
             paint.Color = (SKColor)tickColor;
+            SKPath rectangle2Path = CacheForClock.rectangle2Path;
+            if (rectangle2Path == null) {
+                var rectangle2PathBuilder = new SKPathBuilder();
+                rectangle2PathBuilder.AddRect(rectangle2Rect, SKPathDirection.Clockwise);
+                rectangle2Path = CacheForClock.rectangle2Path = rectangle2PathBuilder.Detach();
+                rectangle2PathBuilder.Dispose();
+            }
             canvas.DrawPath(rectangle2Path, paint);
         }
         
@@ -276,26 +312,34 @@ public class StyleKitName {
             
             // Rectangle 3
         var rectangle3Rect = new SKRect(-3f, -110f, 3f, -102f);
-            SKPath rectangle3Path = CacheForClock.rectangle3Path;
-            rectangle3Path.Reset();
-            rectangle3Path.AddRect(rectangle3Rect, SKPathDirection.Clockwise);
             
             paint.Reset();
             paint.IsAntialias = true;
             paint.Style = SKPaintStyle.Fill;
             paint.Color = (SKColor)tickColor;
+            SKPath rectangle3Path = CacheForClock.rectangle3Path;
+            if (rectangle3Path == null) {
+                var rectangle3PathBuilder = new SKPathBuilder();
+                rectangle3PathBuilder.AddRect(rectangle3Rect, SKPathDirection.Clockwise);
+                rectangle3Path = CacheForClock.rectangle3Path = rectangle3PathBuilder.Detach();
+                rectangle3PathBuilder.Dispose();
+            }
             canvas.DrawPath(rectangle3Path, paint);
             
             // Rectangle 4
         var rectangle4Rect = new SKRect(-3f, 102f, 3f, 110f);
-            SKPath rectangle4Path = CacheForClock.rectangle4Path;
-            rectangle4Path.Reset();
-            rectangle4Path.AddRect(rectangle4Rect, SKPathDirection.Clockwise);
             
             paint.Reset();
             paint.IsAntialias = true;
             paint.Style = SKPaintStyle.Fill;
             paint.Color = (SKColor)tickColor;
+            SKPath rectangle4Path = CacheForClock.rectangle4Path;
+            if (rectangle4Path == null) {
+                var rectangle4PathBuilder = new SKPathBuilder();
+                rectangle4PathBuilder.AddRect(rectangle4Rect, SKPathDirection.Clockwise);
+                rectangle4Path = CacheForClock.rectangle4Path = rectangle4PathBuilder.Detach();
+                rectangle4PathBuilder.Dispose();
+            }
             canvas.DrawPath(rectangle4Path, paint);
             
             canvas.Restore();
@@ -311,26 +355,34 @@ public class StyleKitName {
             
             // Rectangle 5
         var rectangle5Rect = new SKRect(-3f, -110f, 3f, -102f);
-            SKPath rectangle5Path = CacheForClock.rectangle5Path;
-            rectangle5Path.Reset();
-            rectangle5Path.AddRect(rectangle5Rect, SKPathDirection.Clockwise);
             
             paint.Reset();
             paint.IsAntialias = true;
             paint.Style = SKPaintStyle.Fill;
             paint.Color = (SKColor)tickColor;
+            SKPath rectangle5Path = CacheForClock.rectangle5Path;
+            if (rectangle5Path == null) {
+                var rectangle5PathBuilder = new SKPathBuilder();
+                rectangle5PathBuilder.AddRect(rectangle5Rect, SKPathDirection.Clockwise);
+                rectangle5Path = CacheForClock.rectangle5Path = rectangle5PathBuilder.Detach();
+                rectangle5PathBuilder.Dispose();
+            }
             canvas.DrawPath(rectangle5Path, paint);
             
             // Rectangle 6
         var rectangle6Rect = new SKRect(-3f, 102f, 3f, 110f);
-            SKPath rectangle6Path = CacheForClock.rectangle6Path;
-            rectangle6Path.Reset();
-            rectangle6Path.AddRect(rectangle6Rect, SKPathDirection.Clockwise);
             
             paint.Reset();
             paint.IsAntialias = true;
             paint.Style = SKPaintStyle.Fill;
             paint.Color = (SKColor)tickColor;
+            SKPath rectangle6Path = CacheForClock.rectangle6Path;
+            if (rectangle6Path == null) {
+                var rectangle6PathBuilder = new SKPathBuilder();
+                rectangle6PathBuilder.AddRect(rectangle6Rect, SKPathDirection.Clockwise);
+                rectangle6Path = CacheForClock.rectangle6Path = rectangle6PathBuilder.Detach();
+                rectangle6PathBuilder.Dispose();
+            }
             canvas.DrawPath(rectangle6Path, paint);
             
             canvas.Restore();
@@ -346,26 +398,34 @@ public class StyleKitName {
             
             // Rectangle 7
         var rectangle7Rect = new SKRect(-3f, -110f, 3f, -102f);
-            SKPath rectangle7Path = CacheForClock.rectangle7Path;
-            rectangle7Path.Reset();
-            rectangle7Path.AddRect(rectangle7Rect, SKPathDirection.Clockwise);
             
             paint.Reset();
             paint.IsAntialias = true;
             paint.Style = SKPaintStyle.Fill;
             paint.Color = (SKColor)tickColor;
+            SKPath rectangle7Path = CacheForClock.rectangle7Path;
+            if (rectangle7Path == null) {
+                var rectangle7PathBuilder = new SKPathBuilder();
+                rectangle7PathBuilder.AddRect(rectangle7Rect, SKPathDirection.Clockwise);
+                rectangle7Path = CacheForClock.rectangle7Path = rectangle7PathBuilder.Detach();
+                rectangle7PathBuilder.Dispose();
+            }
             canvas.DrawPath(rectangle7Path, paint);
             
             // Rectangle 8
         var rectangle8Rect = new SKRect(-3f, 102f, 3f, 110f);
-            SKPath rectangle8Path = CacheForClock.rectangle8Path;
-            rectangle8Path.Reset();
-            rectangle8Path.AddRect(rectangle8Rect, SKPathDirection.Clockwise);
             
             paint.Reset();
             paint.IsAntialias = true;
             paint.Style = SKPaintStyle.Fill;
             paint.Color = (SKColor)tickColor;
+            SKPath rectangle8Path = CacheForClock.rectangle8Path;
+            if (rectangle8Path == null) {
+                var rectangle8PathBuilder = new SKPathBuilder();
+                rectangle8PathBuilder.AddRect(rectangle8Rect, SKPathDirection.Clockwise);
+                rectangle8Path = CacheForClock.rectangle8Path = rectangle8PathBuilder.Detach();
+                rectangle8PathBuilder.Dispose();
+            }
             canvas.DrawPath(rectangle8Path, paint);
             
             canvas.Restore();
@@ -381,26 +441,34 @@ public class StyleKitName {
             
             // Rectangle 9
         var rectangle9Rect = new SKRect(-3f, -110f, 3f, -102f);
-            SKPath rectangle9Path = CacheForClock.rectangle9Path;
-            rectangle9Path.Reset();
-            rectangle9Path.AddRect(rectangle9Rect, SKPathDirection.Clockwise);
             
             paint.Reset();
             paint.IsAntialias = true;
             paint.Style = SKPaintStyle.Fill;
             paint.Color = (SKColor)tickColor;
+            SKPath rectangle9Path = CacheForClock.rectangle9Path;
+            if (rectangle9Path == null) {
+                var rectangle9PathBuilder = new SKPathBuilder();
+                rectangle9PathBuilder.AddRect(rectangle9Rect, SKPathDirection.Clockwise);
+                rectangle9Path = CacheForClock.rectangle9Path = rectangle9PathBuilder.Detach();
+                rectangle9PathBuilder.Dispose();
+            }
             canvas.DrawPath(rectangle9Path, paint);
             
             // Rectangle 10
         var rectangle10Rect = new SKRect(-3f, 102f, 3f, 110f);
-            SKPath rectangle10Path = CacheForClock.rectangle10Path;
-            rectangle10Path.Reset();
-            rectangle10Path.AddRect(rectangle10Rect, SKPathDirection.Clockwise);
             
             paint.Reset();
             paint.IsAntialias = true;
             paint.Style = SKPaintStyle.Fill;
             paint.Color = (SKColor)tickColor;
+            SKPath rectangle10Path = CacheForClock.rectangle10Path;
+            if (rectangle10Path == null) {
+                var rectangle10PathBuilder = new SKPathBuilder();
+                rectangle10PathBuilder.AddRect(rectangle10Rect, SKPathDirection.Clockwise);
+                rectangle10Path = CacheForClock.rectangle10Path = rectangle10PathBuilder.Detach();
+                rectangle10PathBuilder.Dispose();
+            }
             canvas.DrawPath(rectangle10Path, paint);
             
             canvas.Restore();
@@ -416,26 +484,34 @@ public class StyleKitName {
             
             // Rectangle 11
         var rectangle11Rect = new SKRect(-3f, -110f, 3f, -102f);
-            SKPath rectangle11Path = CacheForClock.rectangle11Path;
-            rectangle11Path.Reset();
-            rectangle11Path.AddRect(rectangle11Rect, SKPathDirection.Clockwise);
             
             paint.Reset();
             paint.IsAntialias = true;
             paint.Style = SKPaintStyle.Fill;
             paint.Color = (SKColor)tickColor;
+            SKPath rectangle11Path = CacheForClock.rectangle11Path;
+            if (rectangle11Path == null) {
+                var rectangle11PathBuilder = new SKPathBuilder();
+                rectangle11PathBuilder.AddRect(rectangle11Rect, SKPathDirection.Clockwise);
+                rectangle11Path = CacheForClock.rectangle11Path = rectangle11PathBuilder.Detach();
+                rectangle11PathBuilder.Dispose();
+            }
             canvas.DrawPath(rectangle11Path, paint);
             
             // Rectangle 12
         var rectangle12Rect = new SKRect(-3f, 102f, 3f, 110f);
-            SKPath rectangle12Path = CacheForClock.rectangle12Path;
-            rectangle12Path.Reset();
-            rectangle12Path.AddRect(rectangle12Rect, SKPathDirection.Clockwise);
             
             paint.Reset();
             paint.IsAntialias = true;
             paint.Style = SKPaintStyle.Fill;
             paint.Color = (SKColor)tickColor;
+            SKPath rectangle12Path = CacheForClock.rectangle12Path;
+            if (rectangle12Path == null) {
+                var rectangle12PathBuilder = new SKPathBuilder();
+                rectangle12PathBuilder.AddRect(rectangle12Rect, SKPathDirection.Clockwise);
+                rectangle12Path = CacheForClock.rectangle12Path = rectangle12PathBuilder.Detach();
+                rectangle12PathBuilder.Dispose();
+            }
             canvas.DrawPath(rectangle12Path, paint);
             
             canvas.Restore();
@@ -447,9 +523,11 @@ public class StyleKitName {
         text2TextPaint.Reset();
         text2TextPaint.IsAntialias = true;
         text2TextPaint.Color = (SKColor)numbersColor;
-        text2TextPaint.Typeface = TypefaceManager.GetTypeface("Avenir Next.ttc");
-        text2TextPaint.TextSize = 25f;
-        StaticLayout text2StaticLayout = CacheForClock.text2StaticLayout.get((int) text2Rect.Width, SKTextAlign.Center, "6", text2TextPaint);
+
+        var text2TextFont = CacheForClock.text2TextFont;
+        text2TextFont.Typeface = TypefaceManager.GetTypeface("Avenir Next.ttc");
+        text2TextFont.Size = 25f;
+        StaticLayout text2StaticLayout = CacheForClock.text2StaticLayout.get((int) text2Rect.Width, SKTextAlign.Center, "6", text2TextPaint, text2TextFont);
         canvas.Save();
         canvas.ClipRect(text2Rect);
         canvas.Translate(text2Rect.Left, text2Rect.Top + (text2Rect.Height - text2StaticLayout.getHeight()) / 2f);
@@ -462,9 +540,11 @@ public class StyleKitName {
         text3TextPaint.Reset();
         text3TextPaint.IsAntialias = true;
         text3TextPaint.Color = (SKColor)numbersColor;
-        text3TextPaint.Typeface = TypefaceManager.GetTypeface("Avenir Next.ttc");
-        text3TextPaint.TextSize = 25f;
-        StaticLayout text3StaticLayout = CacheForClock.text3StaticLayout.get((int) text3Rect.Width, SKTextAlign.Center, "3", text3TextPaint);
+
+        var text3TextFont = CacheForClock.text3TextFont;
+        text3TextFont.Typeface = TypefaceManager.GetTypeface("Avenir Next.ttc");
+        text3TextFont.Size = 25f;
+        StaticLayout text3StaticLayout = CacheForClock.text3StaticLayout.get((int) text3Rect.Width, SKTextAlign.Center, "3", text3TextPaint, text3TextFont);
         canvas.Save();
         canvas.ClipRect(text3Rect);
         canvas.Translate(text3Rect.Left, text3Rect.Top + (text3Rect.Height - text3StaticLayout.getHeight()) / 2f);
@@ -477,9 +557,11 @@ public class StyleKitName {
         text4TextPaint.Reset();
         text4TextPaint.IsAntialias = true;
         text4TextPaint.Color = (SKColor)numbersColor;
-        text4TextPaint.Typeface = TypefaceManager.GetTypeface("Avenir Next.ttc");
-        text4TextPaint.TextSize = 25f;
-        StaticLayout text4StaticLayout = CacheForClock.text4StaticLayout.get((int) text4Rect.Width, SKTextAlign.Center, "9", text4TextPaint);
+
+        var text4TextFont = CacheForClock.text4TextFont;
+        text4TextFont.Typeface = TypefaceManager.GetTypeface("Avenir Next.ttc");
+        text4TextFont.Size = 25f;
+        StaticLayout text4StaticLayout = CacheForClock.text4StaticLayout.get((int) text4Rect.Width, SKTextAlign.Center, "9", text4TextPaint, text4TextFont);
         canvas.Save();
         canvas.ClipRect(text4Rect);
         canvas.Translate(text4Rect.Left, text4Rect.Top + (text4Rect.Height - text4StaticLayout.getHeight()) / 2f);
@@ -492,9 +574,11 @@ public class StyleKitName {
         text13TextPaint.Reset();
         text13TextPaint.IsAntialias = true;
         text13TextPaint.Color = (SKColor)numbersColor;
-        text13TextPaint.Typeface = TypefaceManager.GetTypeface("Avenir Next.ttc");
-        text13TextPaint.TextSize = 20f;
-        StaticLayout text13StaticLayout = CacheForClock.text13StaticLayout.get((int) text13Rect.Width, SKTextAlign.Center, expression, text13TextPaint);
+
+        var text13TextFont = CacheForClock.text13TextFont;
+        text13TextFont.Typeface = TypefaceManager.GetTypeface("Avenir Next.ttc");
+        text13TextFont.Size = 20f;
+        StaticLayout text13StaticLayout = CacheForClock.text13StaticLayout.get((int) text13Rect.Width, SKTextAlign.Center, expression, text13TextPaint, text13TextFont);
         canvas.Save();
         canvas.ClipRect(text13Rect);
         canvas.Translate(text13Rect.Left, text13Rect.Top + (text13Rect.Height - text13StaticLayout.getHeight()) / 2f);
